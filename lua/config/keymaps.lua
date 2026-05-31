@@ -64,9 +64,11 @@ vim.keymap.set("n", "q", function()
         -- 多 buffer → 关闭当前 buffer
         vim.cmd("bdelete")
     else
-        -- 最后一个 → 保存并退出
-        vim.cmd("write")
-        vim.cmd("quit")
+        -- 最后一个 → 可写的先保存，然后退出
+        if vim.bo.modifiable and vim.bo.buftype == "" then
+            vim.cmd("write")
+        end
+        vim.cmd("quit!")
     end
 end, { desc = "智能关闭：窗→buffer→退出" })
 
