@@ -18,7 +18,7 @@ vim.opt.mouse = "a"                -- 所有模式下允许鼠标（点击定位
 vim.opt.autoread = true            -- 外部修改文件时自动重新读取
 
 -- 系统剪贴板
-vim.opt.clipboard = "unnamedplus"  -- y = 复制到系统剪贴板, p = 从系统剪贴板粘贴
+vim.opt.clipboard = ""             -- 不依赖系统剪贴板，用 OSC 52 替代
 
 -- 搜索
 vim.opt.hlsearch = true            -- 搜索匹配项高亮
@@ -63,3 +63,25 @@ vim.api.nvim_create_autocmd({ "BufLeave", "InsertLeave" }, {
     pattern = "*",
     command = "silent! write",
 })
+
+-- OSC 52 clipboard: yank 时通过终端 escape 序列写入本地剪贴板
+-- 支持 SSH/tmux 等没有 X11 的环境，需终端模拟器支持 (Windows Terminal/WezTerm/Kitty/iTerm2)
+local function osc52_yank(text)
+    if not text or #text == 0 or #text > 1000000 then return end
+    local encoded = vim.base64.encode(table.concat(text, "\n"))
+    io.stdout:write(string.format("\027]52;c;%s\027\\", encoded))
+end
+
+vim.api.nvim_create_autocmd("TextYankPost", {
+    group = vim.api.nvim_create_augroup("Osc52Yank", { clear = true }),
+    pattern = "*",
+    callback = function()
+        if vim.v.event.operator == "y" and vim.v.event.regname == "" then
+            osc52_yank(vim.v.event.regcontents)
+        elseif vim.v.event.operator == "d" and vim.v.event.regname == "" then
+            -- dd/diw 等删除操作也复制（可选，如果不需要删掉下面这行）
+            osc52_yank(vim.v.event.regcontents)
+        end
+    end,
+})
+

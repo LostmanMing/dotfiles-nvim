@@ -32,11 +32,14 @@ return {
                     end
                     -- l 打开文件（不关树）
                     vim.keymap.set("n", "l", api.node.open.edit, opts("Open"))
-                    -- Enter 打开文件并关闭树
+                    -- Enter: 文件夹展开/折叠，文件打开并关闭树
                     vim.keymap.set("n", "<CR>", function()
                         api.node.open.edit()
-                        api.tree.close()
-                    end, opts("Open & Close"))
+                        local node = api.tree.get_node_under_cursor()
+                        if node and node.type ~= "directory" then
+                            api.tree.close()
+                        end
+                    end, opts("Open"))
                 end,
                 actions = {
                     open_file = {
