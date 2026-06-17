@@ -24,20 +24,10 @@ brew install --cask font-jetbrains-mono-nerd-font
 ### Linux (Ubuntu/Debian)
 
 ```bash
-sudo apt install ripgrep
+sudo apt install ripgrep fonts-jetbrains-mono
 npm install -g tree-sitter-cli
-
-# lazygit
-LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-tar xf lazygit.tar.gz lazygit && sudo install lazygit /usr/local/bin/
-
-# Nerd Font
-mkdir -p ~/.local/share/fonts
-cd ~/.local/share/fonts
-curl -fLO https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz
-tar xf JetBrainsMono.tar.xz
-fc-cache -fv
+sudo add-apt-repository ppa:lazygit-team/release
+sudo apt update && sudo apt install lazygit
 ```
 
 ## Standalone Installation
