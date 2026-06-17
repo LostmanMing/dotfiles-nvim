@@ -98,3 +98,15 @@ end, { desc = "下一个诊断" })
 -- F1 禁用（避免误触打开 help）
 -- ==========================================
 vim.keymap.set("n", "<F1>", "", { desc = "禁用 F1" })
+
+-- ==========================================
+-- gh：悬浮显示文档 + 诊断
+-- ==========================================
+vim.keymap.set("n", "gh", function()
+    local diags = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+    if #diags > 0 then
+        vim.diagnostic.open_float()
+    else
+        vim.lsp.buf.hover()
+    end
+end, { desc = "显示文档/诊断信息" })

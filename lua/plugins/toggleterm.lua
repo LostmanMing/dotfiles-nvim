@@ -41,6 +41,7 @@ return {
                 vim.cmd(new_id .. "ToggleTerm direction=float")
                 vim.schedule(function() vim.cmd("startinsert") end)
             end, { desc = "新建终端" })
+            vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "退出到 normal 模式" })
         end,
         opts = {
             size = 20,

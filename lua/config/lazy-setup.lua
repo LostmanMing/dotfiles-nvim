@@ -34,7 +34,7 @@ require("lazy").setup({
         version = false,         -- 使用最新版（不锁 semver）
     },
     install = {
-        colorscheme = { "tokyonight" },  -- 启动时就安装的 colorscheme
+        colorscheme = { "onedark" },  -- 启动时就安装的 colorscheme
     },
     checker = {
         enabled = true,          -- 自动检查插件更新

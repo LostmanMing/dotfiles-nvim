@@ -1,12 +1,9 @@
 return {
-    -- 语法高亮（基于 AST）
     {
         "nvim-treesitter/nvim-treesitter",
         branch = "main",
         lazy = false,
-        build = function()
-            pcall(vim.cmd, "TSUpdate")
-        end,
+        build = ":TSUpdate",
         config = function()
             require("nvim-treesitter").setup({
                 ensure_installed = {
@@ -14,9 +11,11 @@ return {
                     "markdown_inline",
                 },
                 auto_install = true,
-                highlight = {
-                    enable = true,
-                },
+            })
+            vim.api.nvim_create_autocmd("FileType", {
+                callback = function()
+                    pcall(vim.treesitter.start)
+                end,
             })
         end,
     },

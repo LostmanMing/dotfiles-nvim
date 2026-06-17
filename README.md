@@ -8,9 +8,37 @@ Part of [LostmanMing/dotfiles](https://github.com/LostmanMing/dotfiles).
 
 - Neovim >= 0.11
 - Git
-- A [Nerd Font](https://www.nerdfonts.com/) (optional, for icons)
-- [ripgrep](https://github.com/BurntSushi/ripgrep) (`brew install ripgrep`)
-- [lazygit](https://github.com/jesseduffield/lazygit) (`brew install lazygit`)
+- A [Nerd Font](https://www.nerdfonts.com/) (for icons)
+- [tree-sitter-cli](https://github.com/tree-sitter/tree-sitter) (for building parsers)
+- [ripgrep](https://github.com/BurntSushi/ripgrep) (for telescope live grep)
+- [lazygit](https://github.com/jesseduffield/lazygit) (for git UI)
+
+### macOS
+
+```bash
+brew install ripgrep lazygit
+npm install -g tree-sitter-cli
+brew install --cask font-jetbrains-mono-nerd-font
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+sudo apt install ripgrep
+npm install -g tree-sitter-cli
+
+# lazygit
+LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+tar xf lazygit.tar.gz lazygit && sudo install lazygit /usr/local/bin/
+
+# Nerd Font
+mkdir -p ~/.local/share/fonts
+cd ~/.local/share/fonts
+curl -fLO https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz
+tar xf JetBrainsMono.tar.xz
+fc-cache -fv
+```
 
 ## Standalone Installation
 
@@ -48,14 +76,14 @@ nvim/
 │       ├── lsp.lua
 │       ├── lualine.lua
 │       ├── mini-diff.lua
-│       ├── neotree.lua
+│       ├── nvim-tree.lua
 │       ├── oil.lua
+│       ├── onedarkpro.lua
 │       ├── pairs.lua
 │       ├── snacks.lua
 │       ├── surround.lua
 │       ├── telescope.lua
 │       ├── toggleterm.lua
-│       ├── tokyonight.lua
 │       ├── treesitter.lua
 │       ├── trouble.lua
 │       └── which-key.lua
@@ -67,20 +95,20 @@ nvim/
 | Category | Plugin | Keybinding |
 |----------|--------|------------|
 | Package Manager | [lazy.nvim](https://github.com/folke/lazy.nvim) | - |
-| Colorscheme | [tokyonight.nvim](https://github.com/folke/tokyonight.nvim) | - |
+| Colorscheme | [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim) | - |
 | Statusline | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | - |
 | Key Hints | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` |
 | Terminal | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | `Ctrl+\` |
 | File Explorer | [oil.nvim](https://github.com/stevearc/oil.nvim) | `-` |
-| File Tree | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim) | `<leader>e` |
+| File Tree | [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | `Ctrl+n` |
 | Fuzzy Finder | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | `<leader>f*` |
 | Syntax | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | - |
-| LSP | [mason.nvim](https://github.com/williamboman/mason.nvim) + [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | `gd`, `K`, `grr`, `grn` |
+| LSP | [mason.nvim](https://github.com/williamboman/mason.nvim) | `gd`, `gh`, `grr`, `grn` |
 | Completion | [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) + [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | `Tab` / `S-Tab` |
 | Comments | [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `gcc` |
 | Surround | [nvim-surround](https://github.com/kylechui/nvim-surround) | `ys`, `ds`, `cs` |
 | Auto Pairs | [mini.pairs](https://github.com/echasnovski/mini.pairs) | - |
-| Git Signs | [snacks.nvim](https://github.com/folke/snacks.nvim) + [mini.diff](https://github.com/echasnovski/mini.diff) | - |
+| Git Signs | [snacks.nvim](https://github.com/folke/snacks.nvim) + [mini.diff](https://github.com/echasnovski/mini.diff) | `<leader>ga/gr` |
 | Git Client | [lazygit.nvim](https://github.com/kdheepak/lazygit.nvim) | `<leader>gg` |
 | Diagnostics | [trouble.nvim](https://github.com/folke/trouble.nvim) | `<leader>xx` |
 
@@ -90,20 +118,23 @@ nvim/
 |-----|--------|
 | `<Space>` | Leader key |
 | `jj` | Exit insert mode |
-| `q` | Smart close (window → buffer → quit) |
+| `q` | Smart close (window -> buffer -> quit) |
 | `gb` | Alternate buffer |
+| `gh` | Hover docs / diagnostics |
 | `<C-h/j/k/l>` | Window navigation |
 | `<S-arrows>` | Window resize |
 | `<leader>ff` | Find files |
 | `<leader>fg` | Live grep |
 | `<leader>fb` | Find buffers |
 | `<leader>fr` | Recent files |
-| `<leader>e` | Toggle file tree |
+| `<C-n>` | Toggle file tree |
 | `<leader>gg` | LazyGit |
 | `<leader>tt` | Toggle terminal |
+| `<C-n>` (terminal) | New terminal |
+| `<C-]>` (terminal) | Next terminal |
+| `<Esc>` (terminal) | Exit to normal mode |
 | `<leader>xx` | Toggle diagnostics |
 | `<leader>cf` | Format code |
 | `gd` | Go to definition |
-| `K` | Hover documentation |
 | `grr` | References |
 | `grn` | Rename |
