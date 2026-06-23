@@ -16,6 +16,20 @@ return {
         end,
     },
 
+    -- Mason tool installer：非 LSP 工具（仅在系统没装 tree-sitter 时下载）
+    {
+        "WhoIsSethDaniel/mason-tool-installer.nvim",
+        lazy = false,
+        dependencies = { "williamboman/mason.nvim" },
+        config = function()
+            if vim.fn.executable("tree-sitter") ~= 1 then
+                require("mason-tool-installer").setup({
+                    ensure_installed = { "tree-sitter-cli" },
+                })
+            end
+        end,
+    },
+
     -- Mason LSP config integration
     {
         "williamboman/mason-lspconfig.nvim",
@@ -39,6 +53,9 @@ return {
             })
 
             -- ─── 按键 ───
+            vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "跳转到定义" })
+            vim.keymap.set("n", "grr", vim.lsp.buf.references, { desc = "查找引用" })
+            vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "悬浮文档" })
             vim.keymap.set("n", "gra", vim.lsp.buf.code_action, { desc = "代码操作" })
             vim.keymap.set("n", "<leader>cf", function()
                 vim.lsp.buf.format({ async = true })
