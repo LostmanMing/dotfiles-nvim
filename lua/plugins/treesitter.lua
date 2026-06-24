@@ -1,21 +1,25 @@
 return {
     {
         "nvim-treesitter/nvim-treesitter",
-        branch = "master",   -- master 分支：预编译 parser，无需本地 tree-sitter CLI
+        branch = "main",   -- v1.0 API，需要系统装 tree-sitter CLI
         lazy = false,
         build = ":TSUpdate",
         config = function()
-            require("nvim-treesitter.configs").setup({
-                ensure_installed = {
-                    "c", "cpp", "python", "lua", "bash", "cmake",
-                    "markdown", "markdown_inline",
-                },
-                auto_install = true,
-                highlight = {
-                    enable = true,
-                    additional_vim_regex_highlighting = false,
-                },
-                indent = { enable = true },
+            local parsers = {
+                "c", "cpp", "python", "lua", "bash", "cmake",
+                "markdown", "markdown_inline",
+            }
+
+            -- main 分支 API：显式安装 parser（已装的会跳过）
+            require("nvim-treesitter").install(parsers)
+
+            -- 进入对应 filetype 时启动 treesitter 高亮
+            vim.api.nvim_create_autocmd("FileType", {
+                pattern = { "c", "cpp", "python", "lua", "bash", "sh",
+                            "cmake", "markdown" },
+                callback = function()
+                    pcall(vim.treesitter.start)
+                end,
             })
         end,
     },
