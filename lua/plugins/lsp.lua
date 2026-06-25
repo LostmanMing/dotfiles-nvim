@@ -88,6 +88,7 @@ return {
                     "--completion-style=detailed",
                     "--limit-results=20",
                     "--header-insertion=never",
+                    "--query-driver=/usr/bin/c++,/usr/bin/g++,/usr/bin/gcc",
                     "-j=4",
                 },
             })
