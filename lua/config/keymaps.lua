@@ -31,46 +31,97 @@ vim.keymap.set("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "关闭当前 buff
 
 -- ==========================================
 -- 智能关闭：q
+-- 顺序：浮窗 → split 窗 → file buffer → 全退
+-- nvim-tree 上按 q 视为"切到代码窗"，永不通过 q 关闭
+-- 所有 file buffer 关完后自动 qa（避免 tree 独占）
 -- ==========================================
+local function is_tree_buf(buf)
+    local ok, tree_api = pcall(require, "nvim-tree.api")
+    if not ok then return false end
+    return tree_api.tree.is_tree_buf(buf)
+end
+
 vim.keymap.set("n", "q", function()
-    -- 判断是否有浮窗
+    -- 光标在 nvim-tree 内 → focus 到右侧代码窗，不关 tree
+    if is_tree_buf(0) then
+        vim.cmd("wincmd l")
+        return
+    end
+
     local function is_floating(winnr)
         local config = vim.api.nvim_win_get_config(winnr)
-        return config.relative ~= "" or config.zindex ~= nil
+        return config.relative ~= ""
     end
 
-    -- 统计非浮窗的窗口数
-    local win_count = 0
+    -- 浮窗：关浮窗（pcall 防御 buffer modified 报错）
+    if is_floating(0) then
+        local ok = pcall(vim.cmd, "close")
+        if not ok then pcall(vim.cmd, "close!") end
+        return
+    end
+
+    -- 统计非浮窗 + 非 tree 的窗口数
+    local non_tree_wins = 0
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if vim.api.nvim_win_get_height(win) ~= -1
-            and vim.api.nvim_win_get_width(win) ~= -1
-            and not is_floating(win) then
-            win_count = win_count + 1
+        local buf = vim.api.nvim_win_get_buf(win)
+        if not is_floating(win) and not is_tree_buf(buf) then
+            non_tree_wins = non_tree_wins + 1
         end
     end
 
-    -- 统计有名字的 buffer 数
-    local listed_bufs = 0
+    -- 收集 listed buffer
+    local listed = {}
     for _, b in ipairs(vim.api.nvim_list_bufs()) do
         if vim.bo[b].buflisted and vim.api.nvim_buf_is_loaded(b) then
-            listed_bufs = listed_bufs + 1
+            table.insert(listed, b)
         end
     end
 
-    if win_count > 1 or is_floating(0) then
-        -- 多窗口 → 关闭当前窗口
-        vim.cmd("hide")
-    elseif listed_bufs > 1 then
-        -- 多 buffer → 关闭当前 buffer
-        vim.cmd("bdelete")
-    else
-        -- 最后一个 → 可写的且有文件名的先保存，然后退出
-        if vim.bo.modifiable and vim.bo.buftype == "" and vim.api.nvim_buf_get_name(0) ~= "" then
-            vim.cmd("write")
-        end
-        vim.cmd("quit!")
+    -- 自动保存（可写的、有文件名的普通 buffer）
+    if vim.bo.modifiable and vim.bo.buftype == "" and vim.api.nvim_buf_get_name(0) ~= "" then
+        pcall(vim.cmd, "silent write")
     end
-end, { desc = "智能关闭：窗→buffer→退出" })
+
+    if non_tree_wins > 1 then
+        vim.cmd("hide")             -- 关当前 split，留 buffer
+    elseif #listed > 1 then
+        -- 删 buffer 前先把当前窗口切到另一个 listed buffer，
+        -- 否则 nvim 在删除当前 buffer 时可能让 tree 独占空间
+        local cur = vim.api.nvim_get_current_buf()
+        local target
+        for _, b in ipairs(listed) do
+            if b ~= cur then
+                target = b
+                break
+            end
+        end
+        if target then
+            vim.api.nvim_win_set_buf(0, target)
+            pcall(vim.api.nvim_buf_delete, cur, { force = false })
+        else
+            vim.cmd("bdelete")
+        end
+    else
+        vim.cmd("qa!")              -- 最后一个 → 全退（tree 跟着退）
+    end
+end, { desc = "智能关闭：tree focus 切回代码 / 浮窗 / split / buffer / 整体退出" })
+
+-- 自动退出：当所有 listed file buffer 都关闭，仅剩 nvim-tree 时整体 qa
+vim.api.nvim_create_autocmd("BufEnter", {
+    callback = function()
+        if not is_tree_buf(0) then return end
+        -- 当前在 tree（说明 bdelete 后切到了 tree）
+        local listed = 0
+        for _, b in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.bo[b].buflisted and vim.api.nvim_buf_is_loaded(b) then
+                listed = listed + 1
+            end
+        end
+        if listed == 0 then
+            vim.cmd("qa!")
+        end
+    end,
+})
 
 -- jj 退出插入模式（等效 Esc）
 vim.keymap.set("i", "jj", "<Esc>", { desc = "退出插入模式" })

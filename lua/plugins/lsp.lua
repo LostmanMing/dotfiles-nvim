@@ -54,7 +54,7 @@ return {
 
             -- ─── 按键 ───
             vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "跳转到定义" })
-            vim.keymap.set("n", "grr", vim.lsp.buf.references, { desc = "查找引用" })
+            vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<CR>", { desc = "查找引用（预览+跳转）" })
             vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "悬浮文档" })
             vim.keymap.set("n", "gra", vim.lsp.buf.code_action, { desc = "代码操作" })
             vim.keymap.set("n", "<leader>cf", function()
