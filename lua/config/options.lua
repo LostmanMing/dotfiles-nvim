@@ -17,6 +17,25 @@ vim.opt.mouse = "a"                -- 所有模式下允许鼠标（点击定位
 -- 文件自动刷新
 vim.opt.autoread = true            -- 外部修改文件时自动重新读取
 
+-- autoread 仅在 nvim 主动 checktime 时生效，加 autocmd 在常见时机触发检查
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+    group = vim.api.nvim_create_augroup("AutoReload", { clear = true }),
+    pattern = "*",
+    callback = function()
+        if vim.fn.mode() ~= "c" and vim.fn.bufexists(0) == 1 then
+            vim.cmd("checktime")
+        end
+    end,
+})
+
+-- 磁盘文件被外部修改并重载后，给用户一行提示
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+    pattern = "*",
+    callback = function()
+        vim.notify("File changed on disk. Buffer reloaded.", vim.log.levels.WARN)
+    end,
+})
+
 -- 系统剪贴板
 vim.opt.clipboard = ""             -- 不依赖系统剪贴板，用 OSC 52 替代
 
@@ -58,10 +77,31 @@ vim.opt.completeopt = {            -- 补全行为
 -- 颜色
 vim.opt.termguicolors = true       -- 启用 24-bit 真彩色（装 colorscheme 的前提）
 
--- 自动保存：离开 buffer 或插入模式时自动写盘
-vim.api.nvim_create_autocmd({ "BufLeave", "InsertLeave" }, {
+-- 自动保存：尽可能缩小"已改未存"窗口，让外部 reload 安全
+local function autosave()
+    if vim.bo.modified
+        and vim.bo.modifiable
+        and vim.bo.buftype == ""
+        and vim.api.nvim_buf_get_name(0) ~= "" then
+        pcall(vim.cmd, "silent! lockmarks write")
+    end
+end
+
+vim.api.nvim_create_autocmd(
+    { "BufLeave", "FocusLost", "InsertLeave", "TextChanged" },
+    {
+        group = vim.api.nvim_create_augroup("AutoSave", { clear = true }),
+        pattern = "*",
+        callback = autosave,
+    }
+)
+
+-- 外部改文件时直接 reload，不弹 y/n（依赖上面的自动保存把 buffer 写到磁盘）
+vim.api.nvim_create_autocmd("FileChangedShell", {
     pattern = "*",
-    command = "silent! write",
+    callback = function()
+        vim.v.fcs_choice = "reload"
+    end,
 })
 
 -- OSC 52 clipboard: yank 时通过终端 escape 序列写入本地剪贴板
