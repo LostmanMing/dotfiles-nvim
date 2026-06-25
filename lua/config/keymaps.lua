@@ -53,6 +53,34 @@ vim.keymap.set("n", "q", function()
         return config.relative ~= ""
     end
 
+    -- Diffview：检测当前 tab 是否由 Diffview 占据；是则用其自带 close
+    local function in_diffview_tab()
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+            local buf = vim.api.nvim_win_get_buf(win)
+            local name = vim.api.nvim_buf_get_name(buf)
+            if name:match("^diffview://") or vim.bo[buf].filetype:match("^Diffview") then
+                return true
+            end
+        end
+        return false
+    end
+    if in_diffview_tab() then
+        pcall(vim.cmd, "DiffviewClose")
+        return
+    end
+
+    -- gitsigns / 原生 :diffsplit 的 diff 模式：把所有处于 diff 的窗口一起关掉
+    if vim.wo.diff then
+        local closed = 0
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+            if vim.api.nvim_win_is_valid(win) and vim.wo[win].diff then
+                pcall(vim.api.nvim_win_close, win, false)
+                closed = closed + 1
+            end
+        end
+        if closed > 0 then return end
+    end
+
     -- 浮窗：关浮窗（pcall 防御 buffer modified 报错）
     if is_floating(0) then
         local ok = pcall(vim.cmd, "close")

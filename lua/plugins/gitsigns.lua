@@ -23,14 +23,18 @@ return {
                 end
 
                 map("n", "]c", function()
-                    if vim.wo.diff then return "]c" end
-                    vim.schedule(function() gs.next_hunk() end)
-                    return "<Ignore>"
+                    if vim.wo.diff then
+                        vim.cmd.normal({ "]c", bang = true })
+                    else
+                        gs.nav_hunk("next")
+                    end
                 end, "下一个 hunk")
                 map("n", "[c", function()
-                    if vim.wo.diff then return "[c" end
-                    vim.schedule(function() gs.prev_hunk() end)
-                    return "<Ignore>"
+                    if vim.wo.diff then
+                        vim.cmd.normal({ "[c", bang = true })
+                    else
+                        gs.nav_hunk("prev")
+                    end
                 end, "上一个 hunk")
 
                 map("n", "<leader>gs", gs.stage_hunk,        "Stage hunk")
