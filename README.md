@@ -68,7 +68,6 @@ nvim/
 │       ├── oil.lua
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
-│       ├── snacks.lua
 │       ├── surround.lua
 │       ├── telescope.lua
 │       ├── toggleterm.lua
@@ -100,7 +99,7 @@ nvim/
 | Git Diff | [diffview.nvim](https://github.com/sindrets/diffview.nvim) | `<leader>gv/gh/gH` |
 | Fast Jump | [flash.nvim](https://github.com/folke/flash.nvim) | `<leader>s` / `<leader>S` |
 | Diagnostics | [trouble.nvim](https://github.com/folke/trouble.nvim) | `<leader>xx` |
-| Misc | [snacks.nvim](https://github.com/folke/snacks.nvim) | - |
+
 
 ## Keybindings
 
