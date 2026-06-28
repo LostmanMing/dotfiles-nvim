@@ -23,6 +23,7 @@ return {
         opts = {
             defaults = {
                 path_display = { "truncate" },
+                initial_mode = "normal",
             },
             pickers = {
                 find_files = {
