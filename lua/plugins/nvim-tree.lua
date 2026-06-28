@@ -21,8 +21,8 @@ return {
                     width = 30,
                 },
                 update_focused_file = {
-                    enable = true,        -- 自动定位到当前 buffer 对应的文件
-                    update_root = false,  -- 不改 nvim-tree 的根，只是高亮+展开到该文件
+                    enable = true,
+                    update_root = false,
                 },
                 renderer = {
                     icons = {
@@ -34,17 +34,11 @@ return {
                     local function opts(desc)
                         return { desc = "nvim-tree: " .. desc, buffer = bufnr, nowait = true }
                     end
-                    -- l 打开文件（不关树）
-                    vim.keymap.set("n", "l", api.node.open.edit, opts("Open"))
-                    -- Enter: 文件夹展开/折叠，文件打开并关闭树
-                    vim.keymap.set("n", "<CR>", function()
-                        api.node.open.edit()
-                        local node = api.tree.get_node_under_cursor()
-                        if node and node.type ~= "directory" then
-                            api.tree.close()
-                        end
-                    end, opts("Open"))
-                    -- 覆盖默认 q（默认 close tree）：focus 到右侧代码窗
+                    -- l: 预览文件，buffer打开但光标留在tree
+                    vim.keymap.set("n", "l", api.node.open.preview, opts("Preview"))
+                    -- Enter: 打开文件，光标跳到文件buffer
+                    vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
+                    -- q: 聚焦到右侧编辑窗口
                     vim.keymap.set("n", "q", "<C-w>l", opts("Focus right window"))
                 end,
                 actions = {
