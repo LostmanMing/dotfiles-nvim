@@ -16,7 +16,7 @@ return {
             { "<leader>fb", "<cmd>Telescope buffers<CR>", desc = "搜 buffer" },
             { "<leader>fh", "<cmd>Telescope help_tags<CR>", desc = "帮助" },
             { "<leader>fr", "<cmd>Telescope oldfiles<CR>", desc = "最近文件" },
-            { "<leader>fs", "<cmd>Telescope git_status<CR>", desc = "Git 状态" },
+            { "<leader>fs", "<cmd>Telescope lsp_document_symbols<CR>", desc = "当前文件符号" },
             { "<leader>fd", "<cmd>Telescope diagnostics<CR>", desc = "诊断" },
             { "<leader>fo", "<cmd>Telescope resume<CR>", desc = "恢复上次搜索" },
         },

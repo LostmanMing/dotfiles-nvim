@@ -61,9 +61,17 @@ return {
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
 
+            -- ─── inlay hint 开关 ───
+            vim.keymap.set("n", "<leader>th", function()
+                vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+            end, { desc = "切换 inlay hints" })
+
             -- ─── on_attach / capabilities ───
             local on_attach = function(client, bufnr)
                 vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+                if client.supports_method("textDocument/inlayHint") then
+                    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+                end
             end
 
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
