@@ -57,6 +57,7 @@ nvim/
 │   │   ├── keymaps.lua
 │   │   └── lazy-setup.lua
 │   └── plugins/
+│       ├── bufferline.lua
 │       ├── cmp.lua
 │       ├── comment.lua
 │       ├── diffview.lua
@@ -85,12 +86,13 @@ nvim/
 | Colorscheme | [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim) | - |
 | Statusline | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | - |
 | Key Hints | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` |
-| Terminal | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | `Ctrl+\` |
+| Terminal | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | `<leader>tt/tf/th/tv` |
+| Buffer Tabs | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | - |
 | File Explorer | [oil.nvim](https://github.com/stevearc/oil.nvim) | `-` |
 | File Tree | [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | `Ctrl+n` |
 | Fuzzy Finder | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | `<leader>f*` |
 | Syntax | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | - |
-| LSP | [mason.nvim](https://github.com/williamboman/mason.nvim) | `gd`, `gh`, `grr`, `<leader>cf` |
+| LSP | [mason.nvim](https://github.com/williamboman/mason.nvim) | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/th` |
 | Completion | [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) + [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | `Tab` / `S-Tab` |
 | Comments | [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `gcc` |
 | Surround | [nvim-surround](https://github.com/kylechui/nvim-surround) | `ys`, `ds`, `cs` |
@@ -136,7 +138,7 @@ nvim/
 | `<leader>fg` | 全局搜文本 (live grep) |
 | `<leader>fb` | 搜已打开的 buffer |
 | `<leader>fr` | 最近打开的文件 |
-| `<leader>fs` | Git 状态（变更文件） |
+| `<leader>fs` | 当前文件符号（类/函数/变量） |
 | `<leader>fd` | 诊断列表 |
 | `<leader>fh` | 帮助文档 |
 | `<leader>fo` | 恢复上次搜索 |
@@ -150,7 +152,9 @@ nvim/
 | `K` | 悬浮文档 |
 | `gh` | 诊断 / 悬浮文档 |
 | `gra` | 代码操作 (code action) |
+| `<C-k>` (插入模式) | 参数签名提示 |
 | `<leader>cf` | 格式化代码 |
+| `<leader>th` | 切换 inlay hints（参数名显示） |
 | `[d` / `]d` | 上一个 / 下一个诊断 |
 | `<leader>xx` | Trouble 诊断面板 |
 
@@ -175,21 +179,35 @@ nvim/
 | `<leader>s` | 输入字符 → 标签标记 → 按标签键跳转 |
 | `<leader>S` | 选中语法节点（函数/类等） |
 
+### Treesitter 文本对象 & 跳转
+
+| Key | Action |
+|-----|--------|
+| `vif` / `vaf` | 选中函数内部 / 整个函数 |
+| `vip` / `vap` | 选中参数内部 / 整个参数 |
+| `vil` / `val` | 选中循环内部 / 整个循环 |
+| `vic` / `vac` | 选中类内部 / 整个类 |
+| `]f` / `[f` | 下一个 / 上一个函数 |
+| `]p` / `[p` | 下一个 / 上一个参数 |
+| `<leader>na` / `<leader>pa` | 参数与下一个 / 上一个互换 |
+| `<Enter>` (n) | 开始增量选中语法节点 |
+| `<Enter>` (v) | 扩大选中范围 |
+| `<BS>` (v) | 缩小选中范围 |
+
 ### 终端 (Toggleterm)
 
 | Key | Action |
 |-----|--------|
-| `Ctrl+\` | 切换终端（默认浮动窗口） |
-| `<leader>tt` | 切换终端 |
+| `<leader>tt` | 全屏终端（新 tab） |
 | `<leader>tf` | 浮动终端 |
-| `<leader>th` | 水平终端 |
-| `<leader>tv` | 垂直终端 |
+| `<leader>th` | 水平终端（底部） |
+| `<leader>tv` | 垂直终端（右侧） |
 
 终端内快捷键：
 
 | Key | Action |
 |-----|--------|
-| `<C-n>` | 新建终端 |
+| `<C-n>` | 新建终端（继承当前方向） |
 | `<C-]>` | 下一个终端 |
 | `<C-[>` | 上一个终端 |
 | `<Esc>` | 退出到 normal 模式 |

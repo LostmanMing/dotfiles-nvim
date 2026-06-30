@@ -60,6 +60,18 @@ return {
             vim.keymap.set("n", "<leader>cf", function()
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
+            vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "参数签名提示" })
+
+            -- ─── 参数签名自动触发 ───
+            vim.api.nvim_create_autocmd("InsertCharPre", {
+                group = vim.api.nvim_create_augroup("LspSignatureHelp", { clear = true }),
+                callback = function()
+                    local char = vim.v.char
+                    if char == "(" or char == "," then
+                        vim.schedule(vim.lsp.buf.signature_help)
+                    end
+                end,
+            })
 
             -- ─── inlay hint 开关 ───
             vim.keymap.set("n", "<leader>th", function()

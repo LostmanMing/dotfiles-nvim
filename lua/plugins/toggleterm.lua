@@ -2,12 +2,11 @@ return {
     {
         "akinsho/toggleterm.nvim",
         version = "*",
-        cmd = "ToggleTerm",
         keys = {
-            { "<leader>tt", "<cmd>ToggleTerm<CR>", desc = "切换终端" },
-            { "<leader>tf", "<cmd>ToggleTerm direction=float<CR>", desc = "浮动终端" },
-            { "<leader>th", "<cmd>ToggleTerm direction=horizontal<CR>", desc = "水平终端" },
-            { "<leader>tv", "<cmd>ToggleTerm direction=vertical<CR>", desc = "垂直终端" },
+            { "<leader>tt", "<cmd>4ToggleTerm direction=tab<CR>", desc = "全屏终端" },
+            { "<leader>tf", "<cmd>1ToggleTerm direction=float<CR>", desc = "浮动终端" },
+            { "<leader>th", "<cmd>2ToggleTerm direction=horizontal<CR>", desc = "水平终端" },
+            { "<leader>tv", "<cmd>3ToggleTerm direction=vertical<CR>", desc = "垂直终端" },
         },
         config = function(_, opts)
             require("toggleterm").setup(opts)
@@ -36,11 +35,13 @@ return {
                 prev_term:open()
             end, { desc = "上一个终端" })
             vim.keymap.set("t", "<C-n>", function()
-                local terms = require("toggleterm.terminal").get_all()
-                local new_id = #terms + 1
-                vim.cmd(new_id .. "ToggleTerm direction=float")
+                local terminal = require("toggleterm.terminal")
+                local cur = terminal.get(tonumber(vim.b.toggle_number))
+                local dir = (cur and cur.direction) or "float"
+                local new_id = #terminal.get_all() + 1
+                vim.cmd(new_id .. "ToggleTerm direction=" .. dir)
                 vim.schedule(function() vim.cmd("startinsert") end)
-            end, { desc = "新建终端" })
+            end, { desc = "新建终端（继承当前方向）" })
             vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "退出到 normal 模式" })
         end,
         opts = {
