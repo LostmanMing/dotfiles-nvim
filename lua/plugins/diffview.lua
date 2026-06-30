@@ -24,14 +24,13 @@ return {
 
                     -- 右侧 diff 窗口
                     view = {
-                        { "n", "<Tab>",   actions.select_next_entry, { desc = "下一个文件" } },
-                        { "n", "<S-Tab>", actions.select_prev_entry, { desc = "上一个文件" } },
-                        { "n", "]c",      actions.next_conflict,     { desc = "下一个冲突" } },
-                        { "n", "[c",      actions.prev_conflict,     { desc = "上一个冲突" } },
-                        { "n", "zR",      "zR",                       { desc = "展开全部折叠" } },
-                        { "n", "zM",      "zM",                       { desc = "折叠全部" } },
-                        { "n", "za",      "za",                       { desc = "切换折叠" } },
-                        { "n", "<leader>e", actions.toggle_files,    { desc = "切换文件面板" } },
+                        { "n", "<Tab>",     actions.select_next_entry, { desc = "下一个文件" } },
+                        { "n", "<S-Tab>",   actions.select_prev_entry, { desc = "上一个文件" } },
+                        { "n", "zR",        "zR",                       { desc = "展开全部折叠" } },
+                        { "n", "zM",        "zM",                       { desc = "折叠全部" } },
+                        { "n", "za",        "za",                       { desc = "切换折叠" } },
+                        { "n", "<leader>e", actions.toggle_files,       { desc = "切换文件面板" } },
+                        -- 注：[c/]c 走 vim 原生 diff 跳 hunk；冲突用 diffview 默认的 [x/]x
                     },
 
                     -- 左侧 file panel（git status 文件列表）
