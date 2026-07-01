@@ -3,7 +3,17 @@ return {
         "sindrets/diffview.nvim",
         cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFileHistory" },
         keys = {
-            { "<leader>gv", "<cmd>DiffviewOpen<CR>",          desc = "Diffview 打开" },
+            { "<leader>gv", function()
+                local lib = require("diffview.lib")
+                local view = lib.get_current_view()
+                if view then
+                    -- 已打开：刷新文件列表（检测磁盘变化）
+                    local actions = require("diffview.actions")
+                    actions.refresh_files()
+                else
+                    vim.cmd("DiffviewOpen")
+                end
+            end, desc = "Diffview 打开/刷新" },
             { "<leader>gV", "<cmd>DiffviewClose<CR>",         desc = "Diffview 关闭" },
             { "<leader>gh", "<cmd>DiffviewFileHistory %<CR>", desc = "当前文件历史" },
             { "<leader>gH", "<cmd>DiffviewFileHistory<CR>",   desc = "仓库历史" },
@@ -12,6 +22,9 @@ return {
             local actions = require("diffview.actions")
             require("diffview").setup({
                 enhanced_diff_hl = true,
+                file_panel = {
+                    listing_style = "tree",
+                },
                 view = {
                     merge_tool = {
                         layout = "diff3_mixed",
