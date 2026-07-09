@@ -77,6 +77,9 @@ vim.opt.completeopt = {            -- 补全行为
 -- 颜色
 vim.opt.termguicolors = true       -- 启用 24-bit 真彩色（装 colorscheme 的前提）
 
+-- 文件末尾换行
+vim.opt.fixendofline = false       -- 保存时不自动在文件末尾补换行符
+
 -- 自动保存：尽可能缩小"已改未存"窗口，让外部 reload 安全
 local function autosave()
     if vim.bo.modified
