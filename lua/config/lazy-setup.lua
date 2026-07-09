@@ -29,6 +29,14 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
     { import = "plugins" },      -- 自动扫描 lua/plugins/*.lua
 }, {
+    git = {
+        -- 只拉最近的历史，避免下载/解析海量 delta 而卡住
+        log = { "-8" },
+        timeout = 120,           -- clone 超时时间（秒）
+        url_format = "https://github.com/%s.git",
+        -- blob:none 过滤按需拉取文件对象，大幅减少 resolving deltas 耗时
+        filter = true,
+    },
     defaults = {
         lazy = true,             -- 所有插件默认延迟加载
         version = false,         -- 使用最新版（不锁 semver）
