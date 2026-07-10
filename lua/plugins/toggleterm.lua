@@ -3,15 +3,33 @@ return {
         "akinsho/toggleterm.nvim",
         version = "*",
         keys = {
-            { "<leader>tt", "<cmd>4ToggleTerm direction=tab<CR>", desc = "全屏终端" },
-            { "<leader>tf", "<cmd>1ToggleTerm direction=float<CR>", desc = "浮动终端" },
-            { "<leader>th", "<cmd>2ToggleTerm direction=horizontal<CR>", desc = "水平终端" },
-            { "<leader>tv", "<cmd>3ToggleTerm direction=vertical<CR>", desc = "垂直终端" },
+            { "<leader>tt", function() _G.toggleterm_open_dir("tab", 4) end, desc = "全屏终端" },
+            { "<leader>tf", function() _G.toggleterm_open_dir("float", 1) end, desc = "浮动终端" },
+            { "<leader>th", function() _G.toggleterm_open_dir("horizontal", 2) end, desc = "水平终端" },
+            { "<leader>tv", function() _G.toggleterm_open_dir("vertical", 3) end, desc = "垂直终端" },
         },
         config = function(_, opts)
             require("toggleterm").setup(opts)
             local terminal = require("toggleterm.terminal")
             local ui = require("toggleterm.ui")
+
+            -- 记录每个 direction 最近聚焦的终端 id，用于 <leader>tt/tf 切回时回到刚才那个
+            local last_id = {}
+            vim.api.nvim_create_autocmd("TermEnter", {
+                callback = function()
+                    local id = tonumber(vim.b.toggle_number)
+                    if not id then return end
+                    local t = terminal.get(id)
+                    if t then last_id[t.direction] = id end
+                end,
+            })
+
+            -- 打开某方向终端：优先回到该方向最近聚焦的终端，否则用默认 id
+            function _G.toggleterm_open_dir(direction, default_id)
+                local id = last_id[direction]
+                if not id or not terminal.get(id) then id = default_id end
+                vim.cmd(id .. "ToggleTerm direction=" .. direction)
+            end
 
             -- 只返回与当前终端 direction 相同的终端，按 id 升序保证切换顺序稳定
             local function same_dir_terms()
