@@ -81,7 +81,6 @@ return {
                     if t.id >= new_id then new_id = t.id + 1 end
                 end
                 vim.cmd(new_id .. "ToggleTerm direction=" .. dir)
-                vim.schedule(function() vim.cmd("startinsert") end)
             end, { desc = "新建终端（继承当前方向）" })
             vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "退出到 normal 模式" })
         end,
@@ -90,6 +89,7 @@ return {
             open_mapping = [[<c-\>]],
             hide_numbers = true,
             start_in_insert = true,
+            persist_mode = true,
             insert_mappings = true,
             persist_size = true,
             direction = "float",
@@ -117,7 +117,6 @@ return {
                     else
                         target:open()
                     end
-                    vim.cmd("startinsert")
                 end)
             end,
             float_opts = {
