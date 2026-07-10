@@ -10,30 +10,37 @@ return {
         },
         config = function(_, opts)
             require("toggleterm").setup(opts)
-            vim.keymap.set("t", "<C-]>", function()
-                local terms = require("toggleterm.terminal").get_all()
-                if #terms < 2 then return end
-                local cur = require("toggleterm.terminal").get(tonumber(vim.b.toggle_number))
+            local terminal = require("toggleterm.terminal")
+
+            -- 只返回与当前终端 direction 相同的终端，按 id 升序保证切换顺序稳定
+            local function same_dir_terms()
+                local cur = terminal.get(tonumber(vim.b.toggle_number))
+                if not cur then return nil, nil end
+                local terms = {}
+                for _, t in ipairs(terminal.get_all()) do
+                    if t.direction == cur.direction then
+                        terms[#terms + 1] = t
+                    end
+                end
+                table.sort(terms, function(a, b) return a.id < b.id end)
                 local idx
                 for i, t in ipairs(terms) do
                     if t.id == cur.id then idx = i break end
                 end
-                local next_term = terms[idx % #terms + 1]
+                return terms, cur, idx
+            end
+
+            -- 在同方向终端间切换：tab 终端只在 tab 之间切，float 只在 float 之间切
+            local function cycle(step)
+                local terms, cur, idx = same_dir_terms()
+                if not terms or #terms < 2 or not idx then return end
+                local target = terms[(idx - 1 + step) % #terms + 1]
                 cur:close()
-                next_term:open()
-            end, { desc = "下一个终端" })
-            vim.keymap.set("t", "<C-[>", function()
-                local terms = require("toggleterm.terminal").get_all()
-                if #terms < 2 then return end
-                local cur = require("toggleterm.terminal").get(tonumber(vim.b.toggle_number))
-                local idx
-                for i, t in ipairs(terms) do
-                    if t.id == cur.id then idx = i break end
-                end
-                local prev_term = terms[(idx - 2) % #terms + 1]
-                cur:close()
-                prev_term:open()
-            end, { desc = "上一个终端" })
+                target:open()
+            end
+
+            vim.keymap.set("t", "<C-]>", function() cycle(1) end, { desc = "下一个同方向终端" })
+            vim.keymap.set("t", "<C-[>", function() cycle(-1) end, { desc = "上一个同方向终端" })
             vim.keymap.set("t", "<C-n>", function()
                 local terminal = require("toggleterm.terminal")
                 local cur = terminal.get(tonumber(vim.b.toggle_number))
