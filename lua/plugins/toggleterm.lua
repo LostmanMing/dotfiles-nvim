@@ -11,6 +11,7 @@ return {
         config = function(_, opts)
             require("toggleterm").setup(opts)
             local terminal = require("toggleterm.terminal")
+            local ui = require("toggleterm.ui")
 
             -- 只返回与当前终端 direction 相同的终端，按 id 升序保证切换顺序稳定
             local function same_dir_terms()
@@ -35,8 +36,18 @@ return {
                 local terms, cur, idx = same_dir_terms()
                 if not terms or #terms < 2 or not idx then return end
                 local target = terms[(idx - 1 + step) % #terms + 1]
-                cur:close()
-                target:open()
+                if cur.direction == "tab" then
+                    -- tab 终端各在独立 tabpage 且都开着：只聚焦目标，
+                    -- 不关旧开新，避免 open_tab 重复建 tab 并使 window 句柄失效
+                    if ui.term_has_open_win(target) then
+                        target:focus()
+                    else
+                        target:open()
+                    end
+                else
+                    cur:close()
+                    target:open()
+                end
             end
 
             vim.keymap.set("t", "<C-]>", function() cycle(1) end, { desc = "下一个同方向终端" })
@@ -61,6 +72,31 @@ return {
             direction = "float",
             close_on_exit = true,
             shell = vim.o.shell,
+            -- 退出终端时：若同方向还有其它终端，聚焦到剩余的最后一个；
+            -- 只有同方向终端全没了，才自然返回普通 buffer
+            on_exit = function(term, _, _, _)
+                local dir = term.direction
+                local exited_id = term.id
+                vim.schedule(function()
+                    local terminal = require("toggleterm.terminal")
+                    local ui = require("toggleterm.ui")
+                    local rest = {}
+                    for _, t in ipairs(terminal.get_all()) do
+                        if t.direction == dir and t.id ~= exited_id then
+                            rest[#rest + 1] = t
+                        end
+                    end
+                    if #rest == 0 then return end
+                    table.sort(rest, function(a, b) return a.id < b.id end)
+                    local target = rest[#rest]
+                    if ui.term_has_open_win(target) then
+                        target:focus()
+                    else
+                        target:open()
+                    end
+                    vim.cmd("startinsert")
+                end)
+            end,
             float_opts = {
                 border = "curved",
                 winblend = 0,
