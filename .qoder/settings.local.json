@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git config --global --list 2>/dev/null | grep -iE \"proxy|http|compression|postBuffer\" ; echo \"---\" ; git --version ; echo \"---\" ; env | grep -iE \"http_proxy|https_proxy|all_proxy\" || echo \"no proxy env\")",
-      "Bash(cd /root/dotfiles-nvim && find . -name \"*.lua\" | xargs grep -l \"lazy\" 2>/dev/null | head; echo \"---LAZY SETUP---\"; grep -rn \"lazy.setup\\\\|require\\(\\\\\"lazy\\\\\"\\)\\\\|clone_filter\\\\|git =\" lua/ init.lua 2>/dev/null | head -20)"
-    ]
-  }
-}
