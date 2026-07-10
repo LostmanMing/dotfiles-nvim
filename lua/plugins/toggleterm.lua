@@ -56,7 +56,12 @@ return {
                 local terminal = require("toggleterm.terminal")
                 local cur = terminal.get(tonumber(vim.b.toggle_number))
                 local dir = (cur and cur.direction) or "float"
-                local new_id = #terminal.get_all() + 1
+                -- 取最大 id + 1，避免与已存在终端（如 tab 用 id=4）撞号
+                -- 否则 ToggleTerm 会误判为 toggle 已有终端而非新建
+                local new_id = 1
+                for _, t in ipairs(terminal.get_all()) do
+                    if t.id >= new_id then new_id = t.id + 1 end
+                end
                 vim.cmd(new_id .. "ToggleTerm direction=" .. dir)
                 vim.schedule(function() vim.cmd("startinsert") end)
             end, { desc = "新建终端（继承当前方向）" })
