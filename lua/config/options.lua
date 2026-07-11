@@ -54,7 +54,13 @@ vim.opt.backup = false             -- 不产生 ~ 备份文件
 vim.opt.undofile = true            -- 持久化撤销记录（关掉重开还能 u 撤销）
 
 -- 视觉
-vim.opt.signcolumn = "yes"         -- 始终预留标记列（gitsigns/lsp 图标用，防止画面抖动）
+vim.opt.signcolumn = "yes"           -- sign 列：git 标记
+vim.diagnostic.config({
+    virtual_text = true,
+    signs = false,
+    underline = true,
+})
+
 vim.opt.cursorline = true          -- 高亮当前光标行
 vim.opt.showmode = false           -- 不显示 --INSERT-- 等模式提示（状态栏会显示）
 

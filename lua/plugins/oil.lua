@@ -2,7 +2,11 @@ return {
     {
         "stevearc/oil.nvim",
         keys = {
-            { "-", "<cmd>Oil<CR>", desc = "打开文件管理器" },
+            { "-", function()
+                local ok, api = pcall(require, "nvim-tree.api")
+                if ok and api.tree.is_visible() then api.tree.close() end
+                vim.cmd("Oil")
+            end, desc = "打开文件管理器" },
         },
         config = function()
             require("oil").setup({

@@ -60,7 +60,6 @@ nvim/
 │       ├── bufferline.lua
 │       ├── cmp.lua
 │       ├── comment.lua
-│       ├── diffview.lua
 │       ├── flash.lua
 │       ├── gitsigns.lua
 │       ├── lsp.lua
@@ -80,27 +79,28 @@ nvim/
 
 ## Plugins
 
-| Category | Plugin | Keybinding |
-|----------|--------|------------|
-| Package Manager | [lazy.nvim](https://github.com/folke/lazy.nvim) | - |
-| Colorscheme | [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim) | - |
-| Statusline | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | - |
-| Key Hints | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` |
-| Terminal | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | `<leader>tt/tf/th/tv` |
-| Buffer Tabs | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | - |
-| File Explorer | [oil.nvim](https://github.com/stevearc/oil.nvim) | `-` |
-| File Tree | [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | `Ctrl+n` |
-| Fuzzy Finder | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | `<leader>f*` |
-| Syntax | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | - |
-| LSP | [mason.nvim](https://github.com/williamboman/mason.nvim) | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/th` |
-| Completion | [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) + [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | `Tab` / `S-Tab` |
-| Comments | [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `gcc` |
-| Surround | [nvim-surround](https://github.com/kylechui/nvim-surround) | `ys`, `ds`, `cs` |
-| Auto Pairs | [mini.pairs](https://github.com/echasnovski/mini.pairs) | - |
-| Git Signs | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | `<leader>gs/gr/gp/gb/gd` |
-| Git Diff | [diffview.nvim](https://github.com/sindrets/diffview.nvim) | `<leader>gv/gh/gH` |
-| Fast Jump | [flash.nvim](https://github.com/folke/flash.nvim) | `<leader>s` / `<leader>S` |
-| Diagnostics | [trouble.nvim](https://github.com/folke/trouble.nvim) | `<leader>xx` |
+| Plugin | 功能 | 快捷键 |
+|--------|------|--------|
+| [lazy.nvim](https://github.com/folke/lazy.nvim) | 插件包管理器 | - |
+| [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim) | OneDark 配色主题 | - |
+| [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | 底部状态栏 | - |
+| [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` 后弹出快捷键提示 | `<leader>` |
+| [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | 顶部 buffer 标签栏 | - |
+| [oil.nvim](https://github.com/stevearc/oil.nvim) | 把目录当文本编辑，批量重命名/移动 | `-` |
+| [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | 侧边文件树 | `Ctrl+n` |
+| [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 模糊搜索（文件/文本/buffer/符号） | `<leader>f*` |
+| [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
+| [mason.nvim](https://github.com/williamboman/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/th` |
+| [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) | 自动补全引擎 | `Tab` / `S-Tab` |
+| [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | 代码片段引擎 | - |
+| [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `gcc` 注释行，`gc` + text object 注释范围 | `gcc` |
+| [nvim-surround](https://github.com/kylechui/nvim-surround) | 添加/删除/替换包围字符 | `ys`, `ds`, `cs` |
+| [mini.pairs](https://github.com/echasnovski/mini.pairs) | 自动配对括号和引号 | - |
+| [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | 行号旁 git 增删改标记，hunk 操作 | `<leader>gs/gr/gp/gb/gd` |
+| [lazygit.nvim](https://github.com/kdheepak/lazygit.nvim) | 打开 lazygit TUI | `<leader>gg` |
+| [flash.nvim](https://github.com/folke/flash.nvim) | 输入字符屏幕标记，一键跳转 | `<leader>s` / `<leader>S` |
+| [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
+| [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 
 
 ## Keybindings
@@ -167,9 +167,7 @@ nvim/
 | `<leader>gp` | 预览 hunk |
 | `<leader>gb` | Blame 当前行 |
 | `<leader>gd` | Diff against index |
-| `<leader>gv` | Diffview 打开 |
-| `<leader>gh` | 当前文件 commit 历史 |
-| `<leader>gH` | 仓库 commit 历史 |
+| `<leader>gg` | LazyGit |
 | `[c` / `]c` | 上一个 / 下一个 hunk |
 
 ### Flash 快速跳转
