@@ -26,12 +26,10 @@ vim.keymap.set("n", "<S-Left>",  ":vertical resize -2<CR>", { desc = "窗口变�
 vim.keymap.set("n", "<S-Right>", ":vertical resize +2<CR>", { desc = "窗口变宽" })
 
 -- ==========================================
--- Buffer 切换：<leader>hl
+-- Buffer 切换
 -- ==========================================
-vim.keymap.set("n", "<leader>h", "<cmd>bprevious<CR>", { desc = "上一个 buffer" })
-vim.keymap.set("n", "<leader>l", "<cmd>bnext<CR>",     { desc = "下一个 buffer" })
-vim.keymap.set("n", "gb",         "<cmd>buffer #<CR>",  { desc = "切回上一个 buffer" })
-vim.keymap.set("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "关闭当前 buffer" })
+vim.keymap.set("n", "<Tab>", "<cmd>bnext<CR>", { desc = "下一个 buffer" })
+vim.keymap.set("n", "<S-Tab>", "<cmd>bprevious<CR>", { desc = "上一个 buffer" })
 
 -- ==========================================
 -- 智能关闭：q
