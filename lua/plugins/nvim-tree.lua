@@ -40,6 +40,12 @@ return {
                     vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
                     -- q: 聚焦到右侧编辑窗口
                     vim.keymap.set("n", "q", "<C-w>l", opts("Focus right window"))
+                    -- a: 新建文件（光标在目录上）或新建同级文件（光标在文件上）
+                    vim.keymap.set("n", "a", api.fs.create, opts("Create"))
+                    -- r: 重命名
+                    vim.keymap.set("n", "r", api.fs.rename, opts("Rename"))
+                    -- d: 删除
+                    vim.keymap.set("n", "d", api.fs.remove, opts("Delete"))
                 end,
                 actions = {
                     open_file = {

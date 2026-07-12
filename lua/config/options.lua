@@ -55,6 +55,8 @@ vim.opt.undofile = true            -- 持久化撤销记录（关掉重开还能
 
 -- 视觉
 vim.opt.signcolumn = "yes"           -- sign 列：git 标记
+
+-- 诊断显示：行尾虚拟文字 + 波浪下划线，不放 W/E 到 sign 列
 vim.diagnostic.config({
     virtual_text = true,
     signs = false,

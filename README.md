@@ -65,7 +65,7 @@ nvim/
 │       ├── lsp.lua
 │       ├── lualine.lua
 │       ├── nvim-tree.lua
-│       ├── oil.lua
+
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
 │       ├── surround.lua
@@ -86,7 +86,7 @@ nvim/
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | 底部状态栏 | - |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` 后弹出快捷键提示 | `<leader>` |
 | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | 顶部 buffer 标签栏 | - |
-| [oil.nvim](https://github.com/stevearc/oil.nvim) | 把目录当文本编辑，批量重命名/移动 | `-` |
+
 | [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | 侧边文件树 | `Ctrl+n` |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 模糊搜索（文件/文本/buffer/符号） | `<leader>f*` |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
@@ -218,3 +218,6 @@ nvim/
 | `l` (树上) | 预览文件 |
 | `Enter` (树上) | 打开文件 |
 | `q` (树上) | 聚焦到编辑窗口 |
+| `a` (树上) | 新建文件/目录 |
+| `r` (树上) | 重命名 |
+| `d` (树上) | 删除 |

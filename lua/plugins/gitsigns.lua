@@ -3,7 +3,7 @@ return {
         "lewis6991/gitsigns.nvim",
         event = { "BufReadPre", "BufNewFile" },
         opts = {
-            sign_priority = 20,
+            sign_priority = 20,         -- 高于 LSP 诊断，git 标记占 sign 列左边
             signs = {
                 add          = { text = "▎" },
                 change       = { text = "▎" },
