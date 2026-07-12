@@ -15,8 +15,8 @@ vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "跳到下面窗口" })
 vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "跳到上面窗口" })
 vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "跳到右边窗口" })
 
--- 分屏：| 垂直（像竖线），- 水平（像横线）
-vim.keymap.set("n", "<Bar>", "<C-w>v", { desc = "垂直分屏" })
+-- 分屏：\ 垂直，- 水平
+vim.keymap.set("n", "\\", "<C-w>v", { desc = "垂直分屏" })
 vim.keymap.set("n", "-", "<C-w>s", { desc = "水平分屏" })
 
 -- 窗口大小调整：Shift + 方向键
