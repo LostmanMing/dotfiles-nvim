@@ -56,9 +56,12 @@ vim.api.nvim_create_autocmd("VimEnter", {
                     if vim.v.event.operator:match("[yd]") and vim.v.event.regname == "" then
                         local text = table.concat(vim.v.event.regcontents, "\n")
                         if #text > 0 and #text < 1000000 then
-                            local osc52 = "\027]52;c;" .. vim.base64.encode(text) .. "\027\\"
-                            -- tmux passthrough 包裹：tmux 内放行到终端，tmux 外忽略
-                            io.stdout:write("\027Ptmux;\027" .. osc52 .. "\027\\")
+                            local seq = "\027]52;c;" .. vim.base64.encode(text) .. "\027\\"
+                            -- 如果在 tmux 内，用 DCS passthrough 穿透到终端
+                            if vim.fn.empty(vim.fn.getenv("TMUX")) == 0 then
+                                seq = "\027Ptmux;\027" .. seq .. "\027\\"
+                            end
+                            io.stdout:write(seq)
                         end
                     end
                 end,
