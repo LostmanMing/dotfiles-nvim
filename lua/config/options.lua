@@ -47,7 +47,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
             or vim.fn.empty(vim.fn.getenv("DISPLAY")) == 0
 
         if not has_display then
-            -- SSH 无图形环境：用 OSC 52 单向写入系统剪贴板
+            -- SSH 无图形环境：用 OSC 52 写入系统剪贴板
+            -- 如果在 tmux 内，包一层 DCS passthrough 让本地 tmux 放行到终端
             vim.g.clipboard = nil
             vim.api.nvim_create_autocmd("TextYankPost", {
                 group = vim.api.nvim_create_augroup("Osc52Yank", { clear = true }),
@@ -55,7 +56,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
                     if vim.v.event.operator:match("[yd]") and vim.v.event.regname == "" then
                         local text = table.concat(vim.v.event.regcontents, "\n")
                         if #text > 0 and #text < 1000000 then
-                            io.stdout:write("\027]52;c;" .. vim.base64.encode(text) .. "\027\\")
+                            local osc52 = "\027]52;c;" .. vim.base64.encode(text) .. "\027\\"
+                            -- tmux passthrough 包裹：tmux 内放行到终端，tmux 外忽略
+                            io.stdout:write("\027Ptmux;\027" .. osc52 .. "\027\\")
                         end
                     end
                 end,
