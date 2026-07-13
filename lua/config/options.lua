@@ -36,14 +36,32 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
     end,
 })
 
--- 系统剪贴板：根据 OS 和环境自动选择，延迟到插件加载后避免被覆盖
+-- 系统剪贴板：根据 OS/环境自动选择，延迟设置避免被插件覆盖
 vim.opt.clipboard = "unnamedplus"
 vim.api.nvim_create_autocmd("VimEnter", {
     once = true,
     callback = function()
         local copy_cmd, paste_cmd
-        if vim.fn.has("mac") == 1 then
-            -- macOS: tmux 内需要 reattach，直接裸调也兼容非 tmux
+        local has_display = vim.fn.has("mac") == 1
+            or vim.fn.empty(vim.fn.getenv("WAYLAND_DISPLAY")) == 0
+            or vim.fn.empty(vim.fn.getenv("DISPLAY")) == 0
+
+        if not has_display then
+            -- SSH 无图形环境：用 OSC 52 单向写入系统剪贴板
+            vim.g.clipboard = nil
+            vim.api.nvim_create_autocmd("TextYankPost", {
+                group = vim.api.nvim_create_augroup("Osc52Yank", { clear = true }),
+                callback = function()
+                    if vim.v.event.operator:match("[yd]") and vim.v.event.regname == "" then
+                        local text = table.concat(vim.v.event.regcontents, "\n")
+                        if #text > 0 and #text < 1000000 then
+                            io.stdout:write("\027]52;c;" .. vim.base64.encode(text) .. "\027\\")
+                        end
+                    end
+                end,
+            })
+            return
+        elseif vim.fn.has("mac") == 1 then
             copy_cmd = "reattach-to-user-namespace pbcopy"
             paste_cmd = "reattach-to-user-namespace pbpaste"
         elseif vim.fn.executable("wl-copy") == 1 then
