@@ -36,8 +36,31 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
     end,
 })
 
--- 系统剪贴板
-vim.opt.clipboard = ""             -- 不依赖系统剪贴板，用 OSC 52 替代
+-- 系统剪贴板：根据 OS 和环境自动选择，延迟到插件加载后避免被覆盖
+vim.opt.clipboard = "unnamedplus"
+vim.api.nvim_create_autocmd("VimEnter", {
+    once = true,
+    callback = function()
+        local copy_cmd, paste_cmd
+        if vim.fn.has("mac") == 1 then
+            -- macOS: tmux 内需要 reattach，直接裸调也兼容非 tmux
+            copy_cmd = "reattach-to-user-namespace pbcopy"
+            paste_cmd = "reattach-to-user-namespace pbpaste"
+        elseif vim.fn.executable("wl-copy") == 1 then
+            copy_cmd = "wl-copy"
+            paste_cmd = "wl-paste"
+        else
+            copy_cmd = "xclip -selection clipboard"
+            paste_cmd = "xclip -selection clipboard -o"
+        end
+        vim.g.clipboard = {
+            name = "OS-clipboard",
+            copy = { ["+"] = copy_cmd, ["*"] = copy_cmd },
+            paste = { ["+"] = paste_cmd, ["*"] = paste_cmd },
+            cache_enabled = 0,
+        }
+    end,
+})
 
 -- 搜索
 vim.opt.hlsearch = true            -- 搜索匹配项高亮
@@ -115,24 +138,4 @@ vim.api.nvim_create_autocmd("FileChangedShell", {
     end,
 })
 
--- OSC 52 clipboard: yank 时通过终端 escape 序列写入本地剪贴板
--- 支持 SSH/tmux 等没有 X11 的环境，需终端模拟器支持 (Windows Terminal/WezTerm/Kitty/iTerm2)
-local function osc52_yank(text)
-    if not text or #text == 0 or #text > 1000000 then return end
-    local encoded = vim.base64.encode(table.concat(text, "\n"))
-    io.stdout:write(string.format("\027]52;c;%s\027\\", encoded))
-end
-
-vim.api.nvim_create_autocmd("TextYankPost", {
-    group = vim.api.nvim_create_augroup("Osc52Yank", { clear = true }),
-    pattern = "*",
-    callback = function()
-        if vim.v.event.operator == "y" and vim.v.event.regname == "" then
-            osc52_yank(vim.v.event.regcontents)
-        elseif vim.v.event.operator == "d" and vim.v.event.regname == "" then
-            -- dd/diw 等删除操作也复制（可选，如果不需要删掉下面这行）
-            osc52_yank(vim.v.event.regcontents)
-        end
-    end,
-})
 

@@ -21,6 +21,7 @@
 | clangd | C/C++ LSP | mason 自动装插件，但 clangd 二进制需系统提供 |
 | tree-sitter-cli | parser 编译器 | npm 或 cargo 安装均可 |
 | Nerd Font | 图标字体 | JetBrainsMono Nerd Font |
+| reattach-to-user-namespace | macOS tmux 剪贴板互通 | `brew install reattach-to-user-namespace` |
 
 ### 版本过旧时的处理
 
@@ -40,6 +41,10 @@ nvim  # 首次启动自动安装插件和 LSP
 ## LSP Servers
 
 mason 自动安装：`clangd`, `lua_ls`, `pyright`, `bashls`, `neocmake`, `marksman`, `jsonls`, `yamlls`
+
+## macOS + tmux 剪贴板
+
+在 tmux 内使用 nvim 需要 `reattach-to-user-namespace`（`brew install`）才能读写系统剪贴板。
 
 ## 配置文档
 

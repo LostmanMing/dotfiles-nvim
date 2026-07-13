@@ -7,13 +7,7 @@ vim.g.mapleader = " "              -- 前缀键设为空格
 vim.g.maplocalleader = " "         -- 本地前缀键同样
 vim.keymap.set({ "n", "v" }, " ", "<Nop>", { desc = "禁用空格原生行为" })
 
--- ==========================================
--- 窗口导航：Ctrl + hjkl 在分割窗口间移动
--- ==========================================
-vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "跳到左边窗口" })
-vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "跳到下面窗口" })
-vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "跳到上面窗口" })
-vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "跳到右边窗口" })
+-- 窗口导航 Ctrl+hjkl：由 tmux.nvim 接管（nvim 分屏 → tmux 面板无缝跳转）
 
 -- 分屏：\ 垂直，- 水平
 vim.keymap.set("n", "\\", "<C-w>v", { desc = "垂直分屏" })
