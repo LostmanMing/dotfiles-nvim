@@ -47,9 +47,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
             or vim.fn.empty(vim.fn.getenv("DISPLAY")) == 0
 
         if not has_display then
-            -- SSH 无图形环境：tmux buffer 中转，双向读写系统剪贴板
+            -- SSH 无图形环境：tmux buffer 复制，OSC 52 查询粘贴
             copy_cmd = "tmux load-buffer -"
-            paste_cmd = "tmux save-buffer -"
+            paste_cmd = [[bash -c 'printf "\e]52;c;?\e\\" >/dev/tty; read -rd "" -t 0.3 <>/dev/tty; echo "${REPLY}"' | sed 's/.*;c;\(.*\)\o33\\\\/\1/' | base64 -d 2>/dev/null]]
         elseif vim.fn.has("mac") == 1 then
             if vim.fn.empty(vim.fn.getenv("TMUX")) == 0 then
                 copy_cmd = "reattach-to-user-namespace pbcopy"
