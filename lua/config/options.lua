@@ -49,7 +49,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
         if not has_display then
             -- SSH 无图形环境：tmux buffer 复制，OSC 52 查询粘贴
             copy_cmd = "tmux load-buffer -"
-            paste_cmd = [[bash -c 'printf "\e]52;c;?\e\\" >/dev/tty; (cat </dev/tty &); sleep 0.3; kill %1 2>/dev/null' | sed -n 's/.*\x1b]52;;\([^\x1b\\]*\).*/\1/p' | base64 -d 2>/dev/null]]
+            paste_cmd = [[bash -c 'printf "\e]52;c;?\e\\" >/dev/tty; (cat </dev/tty &); sleep 0.3; kill %1 2>/dev/null' | tr -cd 'A-Za-z0-9+/=' | base64 -d 2>/dev/null]]
         elseif vim.fn.has("mac") == 1 then
             if vim.fn.empty(vim.fn.getenv("TMUX")) == 0 then
                 copy_cmd = "reattach-to-user-namespace pbcopy"
