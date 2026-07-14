@@ -52,15 +52,19 @@ return {
                 ensure_installed = servers,
             })
 
-            -- ─── 按键 ───
-            vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "跳转到定义" })
-            vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<CR>", { desc = "查找引用（预览+跳转）" })
-            vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "悬浮文档" })
+            -- ─── LSP 按键（gr 系列对齐 archibate）───
+            vim.keymap.set("n", "gd",  vim.lsp.buf.definition, { desc = "跳转到定义" })
+            vim.keymap.set("n", "grd", vim.lsp.buf.declaration, { desc = "跳转到声明" })
+            vim.keymap.set("n", "grt", vim.lsp.buf.type_definition, { desc = "跳转到类型定义" })
+            vim.keymap.set("n", "gri", vim.lsp.buf.implementation, { desc = "跳转到实现" })
+            vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<CR>", { desc = "查找引用" })
+            vim.keymap.set("n", "grn", vim.lsp.buf.rename, { desc = "重命名符号" })
             vim.keymap.set("n", "gra", vim.lsp.buf.code_action, { desc = "代码操作" })
+            vim.keymap.set("n", "K",   vim.lsp.buf.hover, { desc = "悬浮文档" })
+            vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "参数签名提示" })
             vim.keymap.set("n", "<leader>cf", function()
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
-            vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "参数签名提示" })
 
             -- ─── 参数签名自动触发 ───
             vim.api.nvim_create_autocmd("InsertCharPre", {
