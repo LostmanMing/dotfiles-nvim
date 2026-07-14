@@ -68,8 +68,13 @@ vim.api.nvim_create_autocmd("VimEnter", {
             })
             return
         elseif vim.fn.has("mac") == 1 then
-            copy_cmd = "reattach-to-user-namespace pbcopy"
-            paste_cmd = "reattach-to-user-namespace pbpaste"
+            if vim.fn.empty(vim.fn.getenv("TMUX")) == 0 then
+                copy_cmd = "reattach-to-user-namespace pbcopy"
+                paste_cmd = "reattach-to-user-namespace pbpaste"
+            else
+                copy_cmd = "pbcopy"
+                paste_cmd = "pbpaste"
+            end
         elseif vim.fn.executable("wl-copy") == 1 then
             copy_cmd = "wl-copy"
             paste_cmd = "wl-paste"
