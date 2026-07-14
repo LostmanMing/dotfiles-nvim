@@ -47,26 +47,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
             or vim.fn.empty(vim.fn.getenv("DISPLAY")) == 0
 
         if not has_display then
-            -- SSH 无图形环境：用 OSC 52 写入系统剪贴板
-            -- 如果在 tmux 内，包一层 DCS passthrough 让本地 tmux 放行到终端
-            vim.g.clipboard = nil
-            vim.api.nvim_create_autocmd("TextYankPost", {
-                group = vim.api.nvim_create_augroup("Osc52Yank", { clear = true }),
-                callback = function()
-                    if vim.v.event.operator:match("[yd]") and vim.v.event.regname == "" then
-                        local text = table.concat(vim.v.event.regcontents, "\n")
-                        if #text > 0 and #text < 1000000 then
-                            local seq = "\027]52;c;" .. vim.base64.encode(text) .. "\027\\"
-                            -- 如果在 tmux 内，用 DCS passthrough 穿透到终端
-                            if vim.fn.empty(vim.fn.getenv("TMUX")) == 0 then
-                                seq = "\027Ptmux;\027" .. seq .. "\027\\"
-                            end
-                            io.stdout:write(seq)
-                        end
-                    end
-                end,
-            })
-            return
+            -- SSH 无图形环境：tmux buffer 中转，双向读写系统剪贴板
+            copy_cmd = "tmux load-buffer -"
+            paste_cmd = "tmux save-buffer -"
         elseif vim.fn.has("mac") == 1 then
             if vim.fn.empty(vim.fn.getenv("TMUX")) == 0 then
                 copy_cmd = "reattach-to-user-namespace pbcopy"
