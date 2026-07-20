@@ -3,7 +3,7 @@ return {
         "lewis6991/gitsigns.nvim",
         event = { "BufReadPre", "BufNewFile" },
         opts = {
-            sign_priority = 20,         -- 高于 LSP 诊断，git 标记占 sign 列左边
+            sign_priority = 20,
             signs = {
                 add          = { text = "▎" },
                 change       = { text = "▎" },
@@ -48,7 +48,7 @@ return {
                 map("n", "<leader>gp", gs.preview_hunk_inline, "Preview hunk (inline)")
                 map("n", "<leader>gb", function() gs.blame_line { full = true } end, "Blame line")
                 map("n", "<leader>gB", gs.toggle_current_line_blame, "Toggle line blame")
-                map("n", "<leader>gd", gs.diffthis,          "Diff against index")
+                map("n", "<leader>gd", gs.diffthis, "Diff against index (toggle)")
                 map("n", "<leader>gD", function() gs.diffthis("~") end, "Diff against HEAD")
 
                 map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", "Select hunk")
@@ -56,14 +56,6 @@ return {
         },
         config = function(_, opts)
             require("gitsigns").setup(opts)
-            vim.api.nvim_create_autocmd("BufWinEnter", {
-                callback = function(args)
-                    if vim.api.nvim_buf_get_name(args.buf):match("^gitsigns://") then
-                        vim.bo[args.buf].modifiable = false
-                        vim.bo[args.buf].readonly = true
-                    end
-                end,
-            })
         end,
     },
 }

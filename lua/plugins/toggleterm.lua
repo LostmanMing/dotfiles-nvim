@@ -68,8 +68,8 @@ return {
                 end
             end
 
-            vim.keymap.set("t", "<C-]>", function() cycle(1) end, { desc = "下一个同方向终端" })
-            vim.keymap.set("t", "<C-[>", function() cycle(-1) end, { desc = "上一个同方向终端" })
+            vim.keymap.set({ "t", "n" }, "<C-]>", function() cycle(1) end, { desc = "下一个同方向终端" })
+            vim.keymap.set({ "t", "n" }, "<C-[>", function() cycle(-1) end, { desc = "上一个同方向终端" })
             vim.keymap.set("t", "<C-n>", function()
                 local terminal = require("toggleterm.terminal")
                 local cur = terminal.get(tonumber(vim.b.toggle_number))
