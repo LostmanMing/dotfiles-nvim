@@ -24,6 +24,10 @@ return {
                     enable = true,
                     update_root = false,
                 },
+                git = {
+                    enable = true,
+                    timeout = 2000,           -- git 操作超时（ms）
+                },
                 renderer = {
                     icons = {
                         show = { git = true },
