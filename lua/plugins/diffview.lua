@@ -19,6 +19,17 @@ return {
                 merge_tool = { layout = "diff3_mixed", disable_diagnostics = true },
             },
             hooks = {
+                -- 打开文件 diff 时把光标放到可编辑的工作区文件那侧
+                -- （git 版本侧 buffer 只读，工作区文件 buffer 可修改）
+                diff_buf_win_enter = function(bufnr, winid, _)
+                    if vim.bo[bufnr].modifiable and not vim.bo[bufnr].readonly then
+                        vim.schedule(function()
+                            if vim.api.nvim_win_is_valid(winid) then
+                                pcall(vim.api.nvim_set_current_win, winid)
+                            end
+                        end)
+                    end
+                end,
                 -- 记录打开前已有的 buffer，避免误删用户原本就打开的文件
                 view_opened = function()
                     diff_pre = {}
