@@ -31,6 +31,34 @@ return {
                 vim.cmd(id .. "ToggleTerm direction=" .. direction)
             end
 
+            -- 终端里 gf 打开文件：默认会在终端窗口内打开，覆盖终端 buffer 却不更新
+            -- toggleterm 的窗口跟踪，导致之后 <c-\> 关闭时 close_tab 拿到失效窗口句柄
+            -- 报 Invalid window id。改为关闭当前终端、回到编辑窗口后再打开文件。
+            local function term_open_file(edit_cmd)
+                local cfile = vim.fn.expand("<cfile>")
+                if cfile == nil or cfile == "" then return end
+                local cur = terminal.get(tonumber(vim.b.toggle_number))
+                -- 解析路径：优先按 nvim cwd，失败再按终端自身工作目录
+                local target = cfile
+                if vim.fn.filereadable(cfile) == 0 and cur and cur.dir then
+                    local joined = cur.dir .. "/" .. cfile
+                    if vim.fn.filereadable(joined) == 1 then target = joined end
+                end
+                if cur then cur:close() end
+                vim.cmd(edit_cmd .. " " .. vim.fn.fnameescape(target))
+            end
+
+            vim.api.nvim_create_autocmd("TermOpen", {
+                pattern = { "term://*#toggleterm#*", "term://*::toggleterm::*" },
+                callback = function(args)
+                    local buf = args.buf
+                    vim.keymap.set("n", "gf", function() term_open_file("edit") end,
+                        { buffer = buf, desc = "gf: 在编辑窗口打开文件（不占用终端窗口）" })
+                    vim.keymap.set("n", "gF", function() term_open_file("edit") end,
+                        { buffer = buf, desc = "gF: 在编辑窗口打开文件（不占用终端窗口）" })
+                end,
+            })
+
             -- 只返回与当前终端 direction 相同的终端，按 id 升序保证切换顺序稳定
             local function same_dir_terms()
                 local cur = terminal.get(tonumber(vim.b.toggle_number))
