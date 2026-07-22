@@ -3,18 +3,6 @@
 local diff_pre = {}   -- 打开 diffview 前已存在的 buffer
 local diff_seen = {}  -- diffview 本次新引入的 buffer
 
--- 预览：打开选中项的 diff 但焦点留在文件面板（模仿文件浏览器 l 预览、enter 打开）
-local function diff_preview()
-    local panel_win = vim.api.nvim_get_current_win()
-    require("diffview.actions").select_entry()
-    -- diff_buf_win_enter hook 会把焦点移到可编辑侧，这里 schedule 在其之后夺回焦点
-    vim.schedule(function()
-        if vim.api.nvim_win_is_valid(panel_win) then
-            pcall(vim.api.nvim_set_current_win, panel_win)
-        end
-    end)
-end
-
 return {
     {
         "sindrets/diffview.nvim",
@@ -31,17 +19,6 @@ return {
                 merge_tool = { layout = "diff3_mixed", disable_diagnostics = true },
             },
             hooks = {
-                -- 打开文件 diff 时把光标放到可编辑的工作区文件那侧
-                -- （git 版本侧 buffer 只读，工作区文件 buffer 可修改）
-                diff_buf_win_enter = function(bufnr, winid, _)
-                    if vim.bo[bufnr].modifiable and not vim.bo[bufnr].readonly then
-                        vim.schedule(function()
-                            if vim.api.nvim_win_is_valid(winid) then
-                                pcall(vim.api.nvim_set_current_win, winid)
-                            end
-                        end)
-                    end
-                end,
                 -- 记录打开前已有的 buffer，避免误删用户原本就打开的文件
                 view_opened = function()
                     diff_pre = {}
@@ -77,13 +54,19 @@ return {
                     { "n", "<S-Tab>", function() require("diffview.actions").select_prev_entry() end, { desc = "上一个文件" } },
                 },
                 file_panel = {
-                    { "n", "l", diff_preview, { desc = "预览 diff（焦点留在面板）" } },
+                    -- l 预览（焦点留面板），enter/o 打开并进入右侧可编辑窗口
+                    { "n", "l",    function() require("diffview.actions").select_entry() end, { desc = "预览 diff（焦点留在面板）" } },
+                    { "n", "<cr>", function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
+                    { "n", "o",    function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
                     { "n", "s", function() require("diffview.actions").toggle_stage_entry() end, { desc = "stage/unstage" } },
                     { "n", "S", function() require("diffview.actions").stage_all() end, { desc = "stage 全部" } },
                     { "n", "U", function() require("diffview.actions").unstage_all() end, { desc = "unstage 全部" } },
                 },
                 file_history_panel = {
-                    { "n", "l", diff_preview, { desc = "预览 diff（焦点留在面板）" } },
+                    -- l 预览（焦点留面板），enter/o 打开并进入右侧可编辑窗口
+                    { "n", "l",    function() require("diffview.actions").select_entry() end, { desc = "预览 diff（焦点留在面板）" } },
+                    { "n", "<cr>", function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
+                    { "n", "o",    function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
                 },
             },
         },
