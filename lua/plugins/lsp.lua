@@ -77,13 +77,30 @@ return {
                 end,
             })
 
-            -- ─── inlay hint 开关 ───
-            vim.keymap.set("n", "<leader>th", function()
+            -- ─── inlay hint 开关（<leader>th 已被水平终端占用，改用 code 组）───
+            vim.keymap.set("n", "<leader>ci", function()
                 vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
             end, { desc = "切换 inlay hints" })
 
             -- ─── on_attach / capabilities ───
+            -- 判断是否真实磁盘文件 buffer：clangd 只支持 file URI，
+            -- diffview://、gitsigns:// 等虚拟 buffer 会在 inlayHint 等请求上报 -32602 错误
+            local function is_real_file(bufnr)
+                if vim.bo[bufnr].buftype ~= "" then return false end
+                local name = vim.api.nvim_buf_get_name(bufnr)
+                if name == "" then return false end
+                if name:find("://") then return false end
+                return true
+            end
+
             local on_attach = function(client, bufnr)
+                -- 虚拟 buffer：clangd 不支持非 file URI，直接卸载该 client 避免报错
+                if not is_real_file(bufnr) then
+                    vim.schedule(function()
+                        pcall(vim.lsp.buf_detach_client, bufnr, client.id)
+                    end)
+                    return
+                end
                 vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
                 if client.supports_method("textDocument/inlayHint") then
                     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
