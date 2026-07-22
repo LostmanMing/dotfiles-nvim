@@ -17,7 +17,6 @@
 | Node.js >= 18 | LSP 运行时 | jsonls, yamlls 等需要 |
 | ripgrep | Telescope live_grep | 搜索加速 |
 | fd | Telescope 文件查找 | 可选，提升性能 |
-| lazygit | Git TUI | `<leader>gg` 需要 |
 | clangd | C/C++ LSP | mason 自动装插件，但 clangd 二进制需系统提供 |
 | tree-sitter-cli | parser 编译器 | npm 或 cargo 安装均可 |
 | Nerd Font | 图标字体 | JetBrainsMono Nerd Font |
@@ -25,9 +24,8 @@
 
 ### 版本过旧时的处理
 
-部分系统仓库版本可能太旧（如 Ubuntu 的 lazygit、tree-sitter），应优先检查 `--version`，不满足则源码/二进制安装：
+部分系统仓库版本可能太旧（如 Ubuntu 的 tree-sitter），应优先检查 `--version`，不满足则源码/二进制安装：
 
-- **lazygit**: `go install github.com/jesseduffield/lazygit@latest`
 - **tree-sitter-cli**: `npm install -g tree-sitter-cli`
 - **Neovim**: 下载 GitHub Release 二进制或 appimage
 

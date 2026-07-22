@@ -96,7 +96,6 @@ nvim/
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | 添加/删除/替换包围字符 | `ys`, `ds`, `cs` |
 | [mini.pairs](https://github.com/echasnovski/mini.pairs) | 自动配对括号和引号 | - |
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | 行号旁 git 增删改标记，hunk 操作 | `<leader>gs/gr/gp/gb/gd` |
-| [lazygit.nvim](https://github.com/kdheepak/lazygit.nvim) | 打开 lazygit TUI | `<leader>gg` |
 | [flash.nvim](https://github.com/folke/flash.nvim) | 输入字符屏幕标记，一键跳转 | `<leader>s` / `<leader>S` |
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
@@ -167,7 +166,6 @@ nvim/
 | `<leader>gp` | 预览 hunk |
 | `<leader>gb` | Blame 当前行 |
 | `<leader>gd` | Diff against index |
-| `<leader>gg` | LazyGit |
 | `[c` / `]c` | 上一个 / 下一个 hunk |
 
 ### Flash 快速跳转

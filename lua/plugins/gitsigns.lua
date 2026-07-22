@@ -43,7 +43,7 @@ return {
                 map("v", "<leader>gs", function() gs.stage_hunk { vim.fn.line("."), vim.fn.line("v") } end, "Stage hunk")
                 map("v", "<leader>gr", function() gs.reset_hunk { vim.fn.line("."), vim.fn.line("v") } end, "Reset hunk")
                 map("n", "<leader>gS", gs.stage_buffer,      "Stage buffer")
-                map("n", "<leader>gu", gs.undo_stage_hunk,   "Undo stage hunk")
+                map("n", "<leader>gu", gs.stage_hunk,        "取消暂存 hunk（stage 的 toggle）")
                 map("n", "<leader>gR", gs.reset_buffer,      "Reset buffer")
                 map("n", "<leader>gp", gs.preview_hunk_inline, "Preview hunk (inline)")
                 map("n", "<leader>gb", function() gs.blame_line { full = true } end, "Blame line")

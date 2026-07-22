@@ -22,7 +22,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHo
     group = vim.api.nvim_create_augroup("AutoReload", { clear = true }),
     pattern = "*",
     callback = function()
-        if vim.fn.mode() ~= "c" and vim.fn.bufexists(0) == 1 then
+        if vim.fn.mode() ~= "c" and vim.bo.buftype == "" and vim.api.nvim_buf_get_name(0) ~= "" then
             vim.cmd("checktime")
         end
     end,
@@ -142,11 +142,11 @@ vim.api.nvim_create_autocmd(
     }
 )
 
--- 外部改文件时直接 reload，不弹 y/n（依赖上面的自动保存把 buffer 写到磁盘）
+-- 外部改文件时：未修改的自动 reload；已有未保存改动的弹提示，避免静默覆盖
 vim.api.nvim_create_autocmd("FileChangedShell", {
     pattern = "*",
     callback = function()
-        vim.v.fcs_choice = "reload"
+        vim.v.fcs_choice = vim.bo.modified and "ask" or "reload"
     end,
 })
 

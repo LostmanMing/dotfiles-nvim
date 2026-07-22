@@ -48,7 +48,9 @@ return {
             }
 
             require("mason-lspconfig").setup({
-                automatic_installation = true,
+                -- 关闭自动 enable：只启用下面循环里带 capabilities/on_attach 的 server，
+                -- 避免 :Mason 另装的 server 被裸启用（缺补全能力和虚拟 buffer 守卫）
+                automatic_enable = false,
                 ensure_installed = servers,
             })
 
@@ -66,21 +68,12 @@ return {
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
 
-            -- ─── 参数签名自动触发 ───
-            vim.api.nvim_create_autocmd("InsertCharPre", {
-                group = vim.api.nvim_create_augroup("LspSignatureHelp", { clear = true }),
-                callback = function()
-                    local char = vim.v.char
-                    if char == "(" or char == "," then
-                        vim.schedule(vim.lsp.buf.signature_help)
-                    end
-                end,
-            })
-
             -- ─── inlay hint 开关（<leader>th 已被水平终端占用，改用 code 组）───
+            -- 用当前 buffer 作用域，和 on_attach 里 per-buffer 启用保持一致（避免状态不同步）
             vim.keymap.set("n", "<leader>ci", function()
-                vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
-            end, { desc = "切换 inlay hints" })
+                local b = 0
+                vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = b }), { bufnr = b })
+            end, { desc = "切换 inlay hints（当前 buffer）" })
 
             -- ─── on_attach / capabilities ───
             -- 判断是否真实磁盘文件 buffer：clangd 只支持 file URI，
@@ -93,6 +86,9 @@ return {
                 return true
             end
 
+            -- 参数签名自动触发用的共享 augroup（buffer-local 注册，见 on_attach）
+            local sig_group = vim.api.nvim_create_augroup("LspSignatureHelp", { clear = true })
+
             local on_attach = function(client, bufnr)
                 -- 虚拟 buffer：clangd 不支持非 file URI，直接卸载该 client 避免报错
                 if not is_real_file(bufnr) then
@@ -101,27 +97,30 @@ return {
                     end)
                     return
                 end
-                vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-                if client.supports_method("textDocument/inlayHint") then
+                -- 注：Neovim 0.11+ 会在 attach 时自动设置 omnifunc，无需手动设
+                if client:supports_method("textDocument/inlayHint") then
                     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+                end
+                -- 参数签名自动触发：仅在支持 signatureHelp 的 buffer 上，限定 buffer-local
+                if client:supports_method("textDocument/signatureHelp") then
+                    vim.api.nvim_clear_autocmds({ group = sig_group, buffer = bufnr })
+                    vim.api.nvim_create_autocmd("InsertCharPre", {
+                        group = sig_group,
+                        buffer = bufnr,
+                        callback = function()
+                            local ch = vim.v.char
+                            if ch == "(" or ch == "," then
+                                vim.schedule(vim.lsp.buf.signature_help)
+                            end
+                        end,
+                    })
                 end
             end
 
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-            -- ─── 通用 server 启用（继承 nvim-lspconfig 预设 + 追加 capabilities/on_attach）───
-            for _, server in ipairs(servers) do
-                vim.lsp.config(server, {
-                    on_attach = on_attach,
-                    capabilities = capabilities,
-                })
-                vim.lsp.enable(server)
-            end
-
-            -- ─── clangd 自定义参数（覆盖通用配置）───
+            -- clangd 自定义 cmd：在通用循环 enable 之前设置，循环会合并 on_attach/capabilities
             vim.lsp.config("clangd", {
-                on_attach = on_attach,
-                capabilities = capabilities,
                 cmd = {
                     "clangd",
                     "--background-index",
@@ -133,6 +132,15 @@ return {
                     "-j=4",
                 },
             })
+
+            -- ─── 通用 server 启用（继承 nvim-lspconfig 预设 + 追加 capabilities/on_attach）───
+            for _, server in ipairs(servers) do
+                vim.lsp.config(server, {
+                    on_attach = on_attach,
+                    capabilities = capabilities,
+                })
+                vim.lsp.enable(server)
+            end
         end,
     },
 

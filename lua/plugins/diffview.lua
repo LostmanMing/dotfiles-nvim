@@ -1,7 +1,10 @@
 -- 跟踪 diffview 打开期间新引入的文件 buffer：
 -- diffview 默认不清理 LOCAL（工作区）文件 buffer，导致浏览过的文件都残留在 buffer 列表。
-local diff_pre = {}   -- 打开 diffview 前已存在的 buffer
-local diff_seen = {}  -- diffview 本次新引入的 buffer
+-- 用 open_views 计数支持并发 view（如 DiffviewOpen + DiffviewFileHistory 同时开），
+-- 只在首个 view 打开时快照、最后一个 view 关闭时清理，避免误清或泄漏。
+local diff_pre = {}    -- 首个 view 打开前已存在的 buffer
+local diff_seen = {}   -- diffview 期间新引入的 buffer
+local open_views = 0   -- 当前打开的 diffview view 数量
 
 return {
     {
@@ -19,13 +22,16 @@ return {
                 merge_tool = { layout = "diff3_mixed", disable_diagnostics = true },
             },
             hooks = {
-                -- 记录打开前已有的 buffer，避免误删用户原本就打开的文件
+                -- 首个 view 打开时快照已有 buffer，避免误删用户原本就打开的文件
                 view_opened = function()
-                    diff_pre = {}
-                    for _, b in ipairs(vim.api.nvim_list_bufs()) do
-                        diff_pre[b] = true
+                    if open_views == 0 then
+                        diff_pre = {}
+                        for _, b in ipairs(vim.api.nvim_list_bufs()) do
+                            diff_pre[b] = true
+                        end
+                        diff_seen = {}
                     end
-                    diff_seen = {}
+                    open_views = open_views + 1
                 end,
                 -- diffview 读入 diff buffer 时，若是本次新引入的则记录
                 diff_buf_read = function(bufnr)
@@ -33,17 +39,21 @@ return {
                         diff_seen[bufnr] = true
                     end
                 end,
-                -- 关闭 diffview 后，清理本次新引入、当前未显示的 buffer
+                -- 最后一个 view 关闭后，清理本次新引入、当前未显示的 buffer
                 view_closed = function()
+                    open_views = math.max(0, open_views - 1)
+                    if open_views > 0 then return end
+                    -- 先同步快照再调度，避免延迟期间被新 view 重置/污染（竞态）
+                    local seen = diff_seen
+                    diff_seen = {}
                     vim.schedule(function()
-                        for b, _ in pairs(diff_seen) do
+                        for b, _ in pairs(seen) do
                             if vim.api.nvim_buf_is_valid(b)
                                 and #vim.fn.win_findbuf(b) == 0 then
                                 -- force=false：已修改未保存的 buffer 会报错，pcall 兜住并保留
                                 pcall(vim.api.nvim_buf_delete, b, { force = false })
                             end
                         end
-                        diff_seen = {}
                     end)
                 end,
             },
