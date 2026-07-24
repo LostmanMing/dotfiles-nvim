@@ -130,18 +130,21 @@ vim.keymap.set("n", "q", function()
     end
 end, { desc = "智能关闭：tree focus 切回代码 / 浮窗 / split / buffer / 整体退出" })
 
--- 自动退出：当所有 listed file buffer 都关闭，仅剩 nvim-tree 时整体 qa
+-- 自动退出：当除了 nvim-tree（和浮窗）外没有任何窗口在显示内容时整体 qa
+-- 注：不能用 listed buffer 计数判断——预览压缩包等 unlisted buffer 时 listed 会是 0，
+-- 但归档窗口仍在，会被误判为“只剩 tree”而错误退出。改为按窗口判断。
 vim.api.nvim_create_autocmd("BufEnter", {
     callback = function()
         if not is_tree_buf(0) then return end
-        -- 当前在 tree（说明 bdelete 后切到了 tree）
-        local listed = 0
-        for _, b in ipairs(vim.api.nvim_list_bufs()) do
-            if vim.bo[b].buflisted and vim.api.nvim_buf_is_loaded(b) then
-                listed = listed + 1
+        local other_wins = 0
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+            local cfg = vim.api.nvim_win_get_config(win)
+            local buf = vim.api.nvim_win_get_buf(win)
+            if cfg.relative == "" and not is_tree_buf(buf) then
+                other_wins = other_wins + 1
             end
         end
-        if listed == 0 then
+        if other_wins == 0 then
             vim.cmd("qa!")
         end
     end,
