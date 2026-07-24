@@ -102,7 +102,7 @@ vim.keymap.set("n", "q", function()
     end
 
     -- 自动保存（可写的、有文件名的普通 buffer）
-    if vim.bo.modifiable and vim.bo.buftype == "" and vim.api.nvim_buf_get_name(0) ~= "" then
+    if require("config.util").is_writable_file_buf() then
         pcall(vim.cmd, "silent write")
     end
 
@@ -161,16 +161,6 @@ vim.keymap.set("v", "q", "<Esc>", { desc = "退出 visual 模式" })
 -- 清除搜索高亮：Esc
 -- ==========================================
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "清除搜索高亮" })
-
--- ==========================================
--- 诊断跳转：[d ]d
--- ==========================================
-vim.keymap.set("n", "[d", function()
-    vim.diagnostic.jump({ count = -vim.v.count1 })
-end, { desc = "上一个诊断" })
-vim.keymap.set("n", "]d", function()
-    vim.diagnostic.jump({ count = vim.v.count1 })
-end, { desc = "下一个诊断" })
 
 -- ==========================================
 -- F1 禁用（避免误触打开 help）

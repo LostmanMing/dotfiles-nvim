@@ -6,6 +6,18 @@ local diff_pre = {}    -- 首个 view 打开前已存在的 buffer
 local diff_seen = {}   -- diffview 期间新引入的 buffer
 local open_views = 0   -- 当前打开的 diffview view 数量
 
+-- 消除 keymaps 里重复的 require("diffview.actions")：返回调用对应 action 的闭包
+local function da(name)
+    return function() require("diffview.actions")[name]() end
+end
+
+-- l 预览（焦点留面板），<cr>/o 打开并进入右侧可编辑窗口；两个面板共用
+local nav = {
+    { "n", "l",    da("select_entry"), { desc = "预览 diff（焦点留在面板）" } },
+    { "n", "<cr>", da("focus_entry"),  { desc = "打开 diff（进入可编辑窗口）" } },
+    { "n", "o",    da("focus_entry"),  { desc = "打开 diff（进入可编辑窗口）" } },
+}
+
 return {
     {
         "sindrets/diffview.nvim",
@@ -58,26 +70,16 @@ return {
                 end,
             },
             keymaps = {
-                disable_defaults = false,
                 view = {
-                    { "n", "<Tab>",   function() require("diffview.actions").select_next_entry() end, { desc = "下一个文件" } },
-                    { "n", "<S-Tab>", function() require("diffview.actions").select_prev_entry() end, { desc = "上一个文件" } },
+                    { "n", "<Tab>",   da("select_next_entry"), { desc = "下一个文件" } },
+                    { "n", "<S-Tab>", da("select_prev_entry"), { desc = "上一个文件" } },
                 },
-                file_panel = {
-                    -- l 预览（焦点留面板），enter/o 打开并进入右侧可编辑窗口
-                    { "n", "l",    function() require("diffview.actions").select_entry() end, { desc = "预览 diff（焦点留在面板）" } },
-                    { "n", "<cr>", function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
-                    { "n", "o",    function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
-                    { "n", "s", function() require("diffview.actions").toggle_stage_entry() end, { desc = "stage/unstage" } },
-                    { "n", "S", function() require("diffview.actions").stage_all() end, { desc = "stage 全部" } },
-                    { "n", "U", function() require("diffview.actions").unstage_all() end, { desc = "unstage 全部" } },
-                },
-                file_history_panel = {
-                    -- l 预览（焦点留面板），enter/o 打开并进入右侧可编辑窗口
-                    { "n", "l",    function() require("diffview.actions").select_entry() end, { desc = "预览 diff（焦点留在面板）" } },
-                    { "n", "<cr>", function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
-                    { "n", "o",    function() require("diffview.actions").focus_entry() end,  { desc = "打开 diff（进入可编辑窗口）" } },
-                },
+                file_panel = vim.list_extend({
+                    { "n", "s", da("toggle_stage_entry"), { desc = "stage/unstage" } },
+                    { "n", "S", da("stage_all"),          { desc = "stage 全部" } },
+                    { "n", "U", da("unstage_all"),        { desc = "unstage 全部" } },
+                }, nav),
+                file_history_panel = nav,
             },
         },
     },

@@ -29,7 +29,9 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHo
 })
 
 -- 磁盘文件被外部修改并重载后，给用户一行提示
+local grp_filechanged = vim.api.nvim_create_augroup("FileChanged", { clear = true })
 vim.api.nvim_create_autocmd("FileChangedShellPost", {
+    group = grp_filechanged,
     pattern = "*",
     callback = function()
         vim.notify("File changed on disk. Buffer reloaded.", vim.log.levels.WARN)
@@ -95,7 +97,6 @@ vim.opt.signcolumn = "yes"           -- sign 列：git 标记
 vim.diagnostic.config({
     virtual_text = true,
     signs = false,
-    underline = true,
 })
 
 vim.opt.cursorline = true          -- 高亮当前光标行
@@ -123,12 +124,13 @@ vim.opt.termguicolors = true       -- 启用 24-bit 真彩色（装 colorscheme 
 -- 文件末尾换行
 vim.opt.fixendofline = false       -- 保存时不自动在文件末尾补换行符
 
+-- 折叠：默认全部展开（treesitter 提供折叠表达式，按需手动折）
+vim.opt.foldenable = false
+vim.opt.foldlevel = 99
+
 -- 自动保存：尽可能缩小"已改未存"窗口，让外部 reload 安全
 local function autosave()
-    if vim.bo.modified
-        and vim.bo.modifiable
-        and vim.bo.buftype == ""
-        and vim.api.nvim_buf_get_name(0) ~= "" then
+    if vim.bo.modified and require("config.util").is_writable_file_buf() then
         pcall(vim.cmd, "silent! lockmarks write")
     end
 end
@@ -144,6 +146,7 @@ vim.api.nvim_create_autocmd(
 
 -- 外部改文件时：未修改的自动 reload；已有未保存改动的弹提示，避免静默覆盖
 vim.api.nvim_create_autocmd("FileChangedShell", {
+    group = grp_filechanged,
     pattern = "*",
     callback = function()
         vim.v.fcs_choice = vim.bo.modified and "ask" or "reload"

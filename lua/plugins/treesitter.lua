@@ -50,9 +50,6 @@ return {
                 end,
             })
 
-            vim.opt.foldenable = false
-            vim.opt.foldlevel = 99
-
             -- incremental selection
             local sel_history = {}
             local function set_visual(node)

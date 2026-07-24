@@ -150,10 +150,4 @@ return {
         lazy = false,
         dependencies = { "williamboman/mason-lspconfig.nvim" },
     },
-
-    -- Cmp LSP capabilities
-    {
-        "hrsh7th/cmp-nvim-lsp",
-        event = "VeryLazy",
-    },
 }

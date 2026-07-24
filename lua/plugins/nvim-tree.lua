@@ -22,7 +22,6 @@ return {
                 },
                 update_focused_file = {
                     enable = true,
-                    update_root = false,
                 },
                 git = {
                     enable = true,
@@ -51,11 +50,6 @@ return {
                     -- d: 删除
                     vim.keymap.set("n", "d", api.fs.remove, opts("Delete"))
                 end,
-                actions = {
-                    open_file = {
-                        quit_on_open = false,
-                    },
-                },
             })
         end,
     },

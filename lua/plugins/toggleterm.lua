@@ -99,7 +99,6 @@ return {
             vim.keymap.set({ "t", "n" }, "<C-]>", function() cycle(1) end, { desc = "下一个同方向终端" })
             vim.keymap.set({ "t", "n" }, "<C-[>", function() cycle(-1) end, { desc = "上一个同方向终端" })
             vim.keymap.set("t", "<C-n>", function()
-                local terminal = require("toggleterm.terminal")
                 local cur = terminal.get(tonumber(vim.b.toggle_number))
                 local dir = (cur and cur.direction) or "float"
                 -- 取最大 id + 1，避免与已存在终端（如 tab 用 id=4）撞号
@@ -116,9 +115,7 @@ return {
             size = 20,
             open_mapping = [[<c-\>]],
             hide_numbers = true,
-            start_in_insert = true,
             persist_mode = true,
-            insert_mappings = true,
             persist_size = true,
             direction = "float",
             close_on_exit = true,
