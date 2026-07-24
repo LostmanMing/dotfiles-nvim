@@ -5,6 +5,7 @@
 local diff_pre = {}    -- 首个 view 打开前已存在的 buffer
 local diff_seen = {}   -- diffview 期间新引入的 buffer
 local open_views = 0   -- 当前打开的 diffview view 数量
+local hint_off = {}    -- 被 diffview 临时关掉 inlay hint 的 buffer（关闭后恢复）
 
 -- 消除 keymaps 里重复的 require("diffview.actions")：返回调用对应 action 的闭包
 local function da(name)
@@ -17,6 +18,15 @@ local nav = {
     { "n", "<cr>", da("focus_entry"),  { desc = "打开 diff（进入可编辑窗口）" } },
     { "n", "o",    da("focus_entry"),  { desc = "打开 diff（进入可编辑窗口）" } },
 }
+
+-- 关掉某 buffer 的 inlay hint（diffview 里参数名等 hint 会与 git 侧对不齐）
+local function kill_inlay_hints(bufnr)
+    if vim.api.nvim_buf_is_valid(bufnr)
+        and vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }) then
+        vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
+        hint_off[bufnr] = true
+    end
+end
 
 return {
     {
@@ -34,6 +44,12 @@ return {
                 merge_tool = { layout = "diff3_mixed", disable_diagnostics = true },
             },
             hooks = {
+                -- 进入 diff buffer 窗口时关掉 inlay hint（参数名等会与 git 侧对不齐）
+                -- 延迟再关一次，应对 LSP 异步 attach 后才启用 hint
+                diff_buf_win_enter = function(bufnr, _, _)
+                    kill_inlay_hints(bufnr)
+                    vim.defer_fn(function() kill_inlay_hints(bufnr) end, 200)
+                end,
                 -- 首个 view 打开时快照已有 buffer，避免误删用户原本就打开的文件
                 view_opened = function()
                     if open_views == 0 then
@@ -58,12 +74,20 @@ return {
                     -- 先同步快照再调度，避免延迟期间被新 view 重置/污染（竞态）
                     local seen = diff_seen
                     diff_seen = {}
+                    local off = hint_off
+                    hint_off = {}
                     vim.schedule(function()
                         for b, _ in pairs(seen) do
                             if vim.api.nvim_buf_is_valid(b)
                                 and #vim.fn.win_findbuf(b) == 0 then
                                 -- force=false：已修改未保存的 buffer 会报错，pcall 兜住并保留
                                 pcall(vim.api.nvim_buf_delete, b, { force = false })
+                            end
+                        end
+                        -- 恢复被临时关掉的 inlay hint（buffer 仍在的）
+                        for b, _ in pairs(off) do
+                            if vim.api.nvim_buf_is_valid(b) then
+                                pcall(vim.lsp.inlay_hint.enable, true, { bufnr = b })
                             end
                         end
                     end)
