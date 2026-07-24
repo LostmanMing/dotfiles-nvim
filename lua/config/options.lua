@@ -8,8 +8,8 @@ vim.opt.relativenumber = true      -- 显示相对行号（方便做 5j 10k 这�
 
 -- 缩进
 vim.opt.expandtab = true           -- Tab 键插入空格而非真正的 Tab 字符
-vim.opt.shiftwidth = 2             -- >>  <<  缩进/反缩进 2 格
-vim.opt.tabstop = 2                -- Tab 字符在屏幕上显示为 2 个空格宽度
+vim.opt.shiftwidth = 4             -- 默认回落 4 格（实际按文件风格由 vim-sleuth 检测）
+vim.opt.tabstop = 4                -- 默认回落 4 格（同上）
 
 -- 鼠标
 vim.opt.mouse = "a"                -- 所有模式下允许鼠标（点击定位、滚轮、拖动窗格）
