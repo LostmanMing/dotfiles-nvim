@@ -16,35 +16,55 @@ return {
             }
             pcall(function() ts.install(ensure) end)
 
+            -- 启动高亮 + treesitter 折叠（同步/异步安装完成两条路径共用）
+            local function start_ts(buf, lang)
+                if not vim.api.nvim_buf_is_valid(buf) then return end
+                pcall(vim.treesitter.start, buf, lang)
+                for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+                    pcall(function()
+                        vim.wo[win][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+                        vim.wo[win][0].foldmethod = "expr"
+                    end)
+                end
+            end
+
+            local available_cache   -- get_available() 结果缓存（closure local，避免 vim.g 拷贝开销）
+            local installing = {}   -- 正在安装的语言，防止慢网络下重复发起 clone
+
             vim.api.nvim_create_autocmd("FileType", {
                 callback = function(args)
                     local ft = vim.bo[args.buf].filetype
                     if ft == "" then return end
                     local lang = vim.treesitter.language.get_lang(ft) or ft
 
-                    if not vim.treesitter.language.add(lang) then
-                        local available = vim.g._ts_available
-                        if not available then
-                            local ok, list = pcall(ts.get_available)
-                            available = ok and list or {}
-                            vim.g._ts_available = available
-                        end
-                        if vim.tbl_contains(available, lang) then
-                            local ok_inst, handle = pcall(ts.install, lang)
-                            if ok_inst and handle and handle.await then
-                                handle:await(function()
-                                    pcall(vim.treesitter.start, args.buf, lang)
-                                end)
-                            end
-                            return
-                        end
+                    -- pcall：半下载/损坏的 parser .so 不弹错打断操作
+                    local ok_add, has = pcall(vim.treesitter.language.add, lang)
+                    if ok_add and has then
+                        start_ts(args.buf, lang)
+                        return
                     end
 
-                    if vim.treesitter.language.add(lang) then
-                        pcall(vim.treesitter.start, args.buf, lang)
-                        pcall(function()
-                            vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
-                            vim.wo[0][0].foldmethod = "expr"
+                    -- parser 缺失：可安装则后台装（按语言去重），装完再启动
+                    if installing[lang] then return end
+                    if not available_cache then
+                        local ok, list = pcall(ts.get_available)
+                        available_cache = ok and list or {}
+                    end
+                    if not vim.tbl_contains(available_cache, lang) then return end
+
+                    local ok_inst, handle = pcall(ts.install, lang)
+                    if ok_inst and handle and handle.await then
+                        installing[lang] = true
+                        vim.notify(("treesitter: 正在后台安装 %s parser…"):format(lang), vim.log.levels.INFO)
+                        handle:await(function()
+                            installing[lang] = nil
+                            local ok2, has2 = pcall(vim.treesitter.language.add, lang)
+                            if ok2 and has2 then
+                                vim.notify(("treesitter: %s parser 安装完成"):format(lang), vim.log.levels.INFO)
+                                start_ts(args.buf, lang)
+                            else
+                                vim.notify(("treesitter: %s parser 安装失败（网络？稍后 :TSInstall %s 重试）"):format(lang, lang), vim.log.levels.WARN)
+                            end
                         end)
                     end
                 end,
