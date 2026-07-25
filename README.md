@@ -99,7 +99,7 @@ nvim/
 | [flash.nvim](https://github.com/folke/flash.nvim) | 输入字符屏幕标记，一键跳转 | `<leader>s` / `<leader>S` |
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
-| [tmux.nvim](https://github.com/aserowy/tmux.nvim) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
+| [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
 
 
 ## Keybindings
