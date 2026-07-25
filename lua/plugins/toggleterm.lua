@@ -112,10 +112,8 @@ return {
                     end
                     bmap("n", "gf", function() term_open_file("edit") end, "gf: 在编辑窗口打开文件（不占用终端窗口）")
                     bmap("n", "gF", function() term_open_file("edit") end, "gF: 在编辑窗口打开文件（不占用终端窗口）")
-                    -- C-] 仅在终端 buffer 内生效，不影响代码 buffer 的 tag 跳转
-                    -- C-t 在 shell 里是几乎不用的字符交换，代价最小
-                    bmap({ "t", "n" }, "<C-]>", function() cycle(1) end, "下一个同方向终端")
-                    bmap({ "t", "n" }, "<C-t>", function() cycle(-1) end, "上一个同方向终端")
+                    -- C-] 单键环形切换（仅终端 buffer 内生效，不影响代码 buffer 的 tag 跳转）
+                    bmap({ "t", "n" }, "<C-]>", function() cycle(1) end, "切换到下一个同方向终端（环形）")
                     bmap("t", "<C-n>", new_term, "新建终端（继承当前方向）")
                     bmap("t", "<Esc>", [[<C-\><C-n>]], "退出到 normal 模式")
                 end,
