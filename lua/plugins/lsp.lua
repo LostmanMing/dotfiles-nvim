@@ -129,6 +129,8 @@ return {
                     "--limit-results=20",
                     "--header-insertion=never",
                     "--query-driver=/usr/bin/c++,/usr/bin/g++,/usr/bin/gcc",
+                    -- 优先在项目 build/ 找 compile_commands.json；没有时仍会向上逐级搜索
+                    "--compile-commands-dir=build",
                     "-j=4",
                 },
             })
