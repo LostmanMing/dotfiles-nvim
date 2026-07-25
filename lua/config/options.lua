@@ -33,8 +33,8 @@ local grp_filechanged = vim.api.nvim_create_augroup("FileChanged", { clear = tru
 vim.api.nvim_create_autocmd("FileChangedShellPost", {
     group = grp_filechanged,
     pattern = "*",
-    callback = function()
-        vim.notify("File changed on disk. Buffer reloaded.", vim.log.levels.WARN)
+    callback = function(args)
+        vim.notify(("磁盘文件已变更，buffer 已重载: %s"):format(vim.fn.fnamemodify(args.file, ":~:.")), vim.log.levels.WARN)
     end,
 })
 
@@ -145,11 +145,12 @@ vim.api.nvim_create_autocmd(
 )
 
 -- 外部改文件时：未修改的自动 reload；已有未保存改动的弹提示，避免静默覆盖
+-- 注意：触发时当前 buffer 不一定是变更的那个，必须用 args.buf 判断
 vim.api.nvim_create_autocmd("FileChangedShell", {
     group = grp_filechanged,
     pattern = "*",
-    callback = function()
-        vim.v.fcs_choice = vim.bo.modified and "ask" or "reload"
+    callback = function(args)
+        vim.v.fcs_choice = vim.bo[args.buf].modified and "ask" or "reload"
     end,
 })
 

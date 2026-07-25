@@ -45,7 +45,7 @@ require("lazy").setup({
         colorscheme = { "onedark" },  -- 启动时就安装的 colorscheme
     },
     checker = {
-        enabled = true,          -- 自动检查插件更新
+        enabled = false,         -- 不后台检查更新（无人消费结果，纯开销）；:Lazy 里按 C 手动查
         notify = false,          -- 不弹更新通知
     },
     change_detection = {

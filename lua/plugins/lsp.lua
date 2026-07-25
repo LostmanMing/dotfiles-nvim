@@ -62,7 +62,8 @@ return {
             vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<CR>", { desc = "查找引用" })
             vim.keymap.set("n", "grn", vim.lsp.buf.rename, { desc = "重命名符号" })
             vim.keymap.set("n", "gra", vim.lsp.buf.code_action, { desc = "代码操作" })
-            vim.keymap.set("n", "K",   vim.lsp.buf.hover, { desc = "悬浮文档" })
+            -- K 悬浮文档：0.11+ 内置在 LSP attach 时 buffer-local 映射，无需全局设
+            -- （全局映射会让非 LSP buffer 的 K 失去 man/keywordprg 查询）
             vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "参数签名提示" })
             vim.keymap.set("n", "<leader>cf", function()
                 vim.lsp.buf.format({ async = true })

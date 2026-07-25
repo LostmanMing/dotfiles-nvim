@@ -5,25 +5,26 @@
 -- Leader 键
 vim.g.mapleader = " "              -- 前缀键设为空格
 vim.g.maplocalleader = " "         -- 本地前缀键同样
-vim.keymap.set({ "n", "v" }, " ", "<Nop>", { desc = "禁用空格原生行为" })
+vim.keymap.set({ "n", "x" }, " ", "<Nop>", { desc = "禁用空格原生行为" })
 
--- 窗口导航 Ctrl+hjkl：由 tmux.nvim 接管（nvim 分屏 → tmux 面板无缝跳转）
+-- 窗口导航 Ctrl+hjkl：由 vim-tmux-navigator 接管（nvim 分屏 → tmux 面板无缝跳转）
 
 -- 分屏：\ 垂直，- 水平
 vim.keymap.set("n", "\\", "<C-w>v", { desc = "垂直分屏" })
 vim.keymap.set("n", "-", "<C-w>s", { desc = "水平分屏" })
 
 -- 窗口大小调整：Shift + 方向键
-vim.keymap.set("n", "<S-Up>",    ":resize +2<CR>", { desc = "窗口增高" })
-vim.keymap.set("n", "<S-Down>",  ":resize -2<CR>", { desc = "窗口变矮" })
-vim.keymap.set("n", "<S-Left>",  ":vertical resize -2<CR>", { desc = "窗口变窄" })
-vim.keymap.set("n", "<S-Right>", ":vertical resize +2<CR>", { desc = "窗口变宽" })
+vim.keymap.set("n", "<S-Up>",    "<cmd>resize +2<CR>", { desc = "窗口增高" })
+vim.keymap.set("n", "<S-Down>",  "<cmd>resize -2<CR>", { desc = "窗口变矮" })
+vim.keymap.set("n", "<S-Left>",  "<cmd>vertical resize -2<CR>", { desc = "窗口变窄" })
+vim.keymap.set("n", "<S-Right>", "<cmd>vertical resize +2<CR>", { desc = "窗口变宽" })
 
 -- ==========================================
 -- Buffer 切换
 -- ==========================================
-vim.keymap.set("n", "H", "<cmd>bprevious<CR>", { desc = "上一个 buffer" })
-vim.keymap.set("n", "L", "<cmd>bnext<CR>", { desc = "下一个 buffer" })
+-- 按 bufferline 可视顺序切换（bnext/bprev 按编号排序，可能与标签栏顺序不一致）
+vim.keymap.set("n", "H", "<cmd>BufferLineCyclePrev<CR>", { desc = "上一个 buffer" })
+vim.keymap.set("n", "L", "<cmd>BufferLineCycleNext<CR>", { desc = "下一个 buffer" })
 
 -- ==========================================
 -- 智能关闭：q
@@ -32,9 +33,22 @@ vim.keymap.set("n", "L", "<cmd>bnext<CR>", { desc = "下一个 buffer" })
 -- 所有 file buffer 关完后自动 qa（避免 tree 独占）
 -- ==========================================
 local function is_tree_buf(buf)
+    -- 插件没加载时 buffer 不可能是树；且避免 require 触发 lazy 提前加载 nvim-tree
+    if not package.loaded["nvim-tree"] then return false end
     local ok, tree_api = pcall(require, "nvim-tree.api")
     if not ok then return false end
     return tree_api.tree.is_tree_buf(buf)
+end
+
+-- 全退前把所有可写且已修改的 buffer 写盘，避免 qa! 静默丢掉隐藏 buffer 的改动
+local function save_all_and_quit()
+    for _, b in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].modified
+            and require("config.util").is_writable_file_buf(b) then
+            vim.api.nvim_buf_call(b, function() pcall(vim.cmd, "silent write") end)
+        end
+    end
+    vim.cmd("qa!")
 end
 
 vim.keymap.set("n", "q", function()
@@ -126,7 +140,7 @@ vim.keymap.set("n", "q", function()
             vim.cmd("bdelete")
         end
     else
-        vim.cmd("qa!")              -- 最后一个 → 全退（tree 跟着退）
+        save_all_and_quit()         -- 最后一个 → 全退（先写盘所有已改 buffer，tree 跟着退）
     end
 end, { desc = "智能关闭：tree focus 切回代码 / 浮窗 / split / buffer / 整体退出" })
 
@@ -145,7 +159,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
             end
         end
         if other_wins == 0 then
-            vim.cmd("qa!")
+            save_all_and_quit()
         end
     end,
 })
@@ -155,7 +169,7 @@ vim.keymap.set("i", "jj", "<Esc>", { desc = "退出插入模式" })
 
 -- 把宏录制移到 gq
 vim.keymap.set("n", "gq", "q", { desc = "开始宏录制" })
-vim.keymap.set("v", "q", "<Esc>", { desc = "退出 visual 模式" })
+vim.keymap.set("x", "q", "<Esc>", { desc = "退出 visual 模式" })
 
 -- ==========================================
 -- 清除搜索高亮：Esc
@@ -165,7 +179,7 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "清除搜索高亮
 -- ==========================================
 -- F1 禁用（避免误触打开 help）
 -- ==========================================
-vim.keymap.set("n", "<F1>", "", { desc = "禁用 F1" })
+vim.keymap.set({ "n", "i" }, "<F1>", "<Nop>", { desc = "禁用 F1" })
 
 -- ==========================================
 -- gh：悬浮显示文档 + 诊断

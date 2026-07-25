@@ -29,10 +29,14 @@ return {
                     end,
                 },
                 mapping = cmp.mapping.preset.insert({
+                    -- 回车确认补全；未选中任何项时保持原生换行
+                    -- （LSP 片段类补全需确认才展开参数占位符）
+                    ["<CR>"] = cmp.mapping.confirm({ select = false }),
                     ["<Tab>"] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.select_next_item()
-                        elseif luasnip.expand_or_jumpable() then
+                        -- locally: 只在当前 snippet 区域内跳，避免跳回远处旧占位符
+                        elseif luasnip.expand_or_locally_jumpable() then
                             luasnip.expand_or_jump()
                         else
                             fallback()

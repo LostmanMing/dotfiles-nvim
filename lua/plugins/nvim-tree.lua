@@ -34,6 +34,8 @@ return {
                 },
                 on_attach = function(bufnr)
                     local api = require("nvim-tree.api")
+                    -- 先挂默认键（g? 帮助、I 切 git-ignore、R 刷新、x/c/p 文件操作等），再覆盖自定义
+                    api.config.mappings.default_on_attach(bufnr)
                     local function opts(desc)
                         return { desc = "nvim-tree: " .. desc, buffer = bufnr, nowait = true }
                     end

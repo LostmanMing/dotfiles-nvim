@@ -15,7 +15,9 @@ return {
 
             -- 记录每个 direction 最近聚焦的终端 id，用于 <leader>tt/tf 切回时回到刚才那个
             local last_id = {}
+            local grp = vim.api.nvim_create_augroup("MyToggleterm", { clear = true })
             vim.api.nvim_create_autocmd("TermEnter", {
+                group = grp,
                 callback = function()
                     local id = tonumber(vim.b.toggle_number)
                     if not id then return end
@@ -27,7 +29,9 @@ return {
             -- 打开某方向终端：优先回到该方向最近聚焦的终端，否则用默认 id
             function _G.toggleterm_open_dir(direction, default_id)
                 local id = last_id[direction]
-                if not id or not terminal.get(id) then id = default_id end
+                local t = id and terminal.get(id)
+                -- id 可能被其它方向的终端复用，方向不符时回退默认
+                if not t or t.direction ~= direction then id = default_id end
                 vim.cmd(id .. "ToggleTerm direction=" .. direction)
             end
 
@@ -47,17 +51,6 @@ return {
                 if cur then cur:close() end
                 vim.cmd(edit_cmd .. " " .. vim.fn.fnameescape(target))
             end
-
-            vim.api.nvim_create_autocmd("TermOpen", {
-                pattern = { "term://*#toggleterm#*", "term://*::toggleterm::*" },
-                callback = function(args)
-                    local buf = args.buf
-                    vim.keymap.set("n", "gf", function() term_open_file("edit") end,
-                        { buffer = buf, desc = "gf: 在编辑窗口打开文件（不占用终端窗口）" })
-                    vim.keymap.set("n", "gF", function() term_open_file("edit") end,
-                        { buffer = buf, desc = "gF: 在编辑窗口打开文件（不占用终端窗口）" })
-                end,
-            })
 
             -- 只返回与当前终端 direction 相同的终端，按 id 升序保证切换顺序稳定
             local function same_dir_terms()
@@ -96,20 +89,35 @@ return {
                 end
             end
 
-            vim.keymap.set({ "t", "n" }, "<C-]>", function() cycle(1) end, { desc = "下一个同方向终端" })
-            vim.keymap.set({ "t", "n" }, "<C-[>", function() cycle(-1) end, { desc = "上一个同方向终端" })
-            vim.keymap.set("t", "<C-n>", function()
+            -- 新建终端：取最大 id + 1，避免与已存在终端（如 tab 用 id=4）撞号
+            local function new_term()
                 local cur = terminal.get(tonumber(vim.b.toggle_number))
                 local dir = (cur and cur.direction) or "float"
-                -- 取最大 id + 1，避免与已存在终端（如 tab 用 id=4）撞号
-                -- 否则 ToggleTerm 会误判为 toggle 已有终端而非新建
                 local new_id = 1
                 for _, t in ipairs(terminal.get_all()) do
                     if t.id >= new_id then new_id = t.id + 1 end
                 end
                 vim.cmd(new_id .. "ToggleTerm direction=" .. dir)
-            end, { desc = "新建终端（继承当前方向）" })
-            vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "退出到 normal 模式" })
+            end
+
+            -- 终端按键全部 buffer-local（仅 toggleterm buffer），不污染全局：
+            -- 之前全局绑 <C-[> 会劫持 Esc（同一个键），<C-]> 会挡原生 tag 跳转
+            vim.api.nvim_create_autocmd("TermOpen", {
+                group = grp,
+                pattern = { "term://*#toggleterm#*", "term://*::toggleterm::*" },
+                callback = function(args)
+                    local buf = args.buf
+                    local function bmap(mode, lhs, rhs, desc)
+                        vim.keymap.set(mode, lhs, rhs, { buffer = buf, desc = desc })
+                    end
+                    bmap("n", "gf", function() term_open_file("edit") end, "gf: 在编辑窗口打开文件（不占用终端窗口）")
+                    bmap("n", "gF", function() term_open_file("edit") end, "gF: 在编辑窗口打开文件（不占用终端窗口）")
+                    bmap({ "t", "n" }, "<M-]>", function() cycle(1) end, "下一个同方向终端")
+                    bmap({ "t", "n" }, "<M-[>", function() cycle(-1) end, "上一个同方向终端")
+                    bmap("t", "<C-n>", new_term, "新建终端（继承当前方向）")
+                    bmap("t", "<Esc>", [[<C-\><C-n>]], "退出到 normal 模式")
+                end,
+            })
         end,
         opts = {
             size = 20,

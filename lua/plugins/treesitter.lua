@@ -50,8 +50,13 @@ return {
                 end,
             })
 
-            -- incremental selection
+            -- incremental selection（选区历史按 buffer 隔离，避免跨 buffer 用到失效节点）
             local sel_history = {}
+            local function hist()
+                local b = vim.api.nvim_get_current_buf()
+                sel_history[b] = sel_history[b] or {}
+                return sel_history[b]
+            end
             local function set_visual(node)
                 local sr, sc, er, ec = node:range()
                 vim.fn.setpos("'<", { 0, sr + 1, sc + 1, 0 })
@@ -59,26 +64,36 @@ return {
                 vim.cmd("normal! gv")
             end
             local function init_selection()
-                sel_history = {}
+                local b = vim.api.nvim_get_current_buf()
+                sel_history[b] = {}
                 local node = vim.treesitter.get_node()
                 if not node then return end
-                table.insert(sel_history, node)
+                table.insert(sel_history[b], node)
                 set_visual(node)
             end
             local function node_incremental()
-                local last = sel_history[#sel_history]
+                local h = hist()
+                local last = h[#h]
                 if not last then return init_selection() end
                 local parent = last:parent()
                 if not parent then return vim.cmd("normal! gv") end
-                table.insert(sel_history, parent)
+                table.insert(h, parent)
                 set_visual(parent)
             end
             local function node_decremental()
-                if #sel_history <= 1 then return vim.cmd("normal! gv") end
-                table.remove(sel_history)
-                set_visual(sel_history[#sel_history])
+                local h = hist()
+                if #h <= 1 then return vim.cmd("normal! gv") end
+                table.remove(h)
+                set_visual(h[#h])
             end
-            vim.keymap.set("n", "<CR>", init_selection, { desc = "TS init selection" })
+            -- <CR> 用 expr：quickfix/cmdline-window 等特殊场景放行原生回车（跳转/执行）
+            vim.keymap.set("n", "<CR>", function()
+                if vim.bo.buftype ~= "" or vim.fn.getcmdwintype() ~= "" then
+                    return "<CR>"
+                end
+                vim.schedule(init_selection)
+                return "<Ignore>"
+            end, { expr = true, desc = "TS init selection" })
             vim.keymap.set("x", "<CR>", node_incremental, { desc = "TS node incremental" })
             vim.keymap.set("x", "<BS>", node_decremental, { desc = "TS node decremental" })
         end,

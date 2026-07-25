@@ -24,10 +24,16 @@ return {
             defaults = {
                 path_display = { "truncate" },
                 initial_mode = "normal",
+                -- hidden=true 时排除 .git/ 内容（.git 不在 gitignore 里）
+                file_ignore_patterns = { "^%.git/" },
             },
             pickers = {
                 find_files = {
                     hidden = true,
+                },
+                live_grep = {
+                    -- 与 find_files 一致：搜隐藏文件但跳过 .git/
+                    additional_args = { "--hidden", "--glob", "!**/.git/*" },
                 },
             },
         },
