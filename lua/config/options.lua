@@ -102,6 +102,10 @@ vim.diagnostic.config({
 vim.opt.cursorline = true          -- 高亮当前光标行
 vim.opt.showmode = false           -- 不显示 --INSERT-- 等模式提示（状态栏会显示）
 
+-- 全局状态栏：分屏时只留一条底部状态栏；同时规避 noice 在 nvim 0.12-dev 下
+-- cmdheight=0 打开无状态栏浮窗（如 :Lazy）时 redraw_ruler 断言崩溃的问题
+vim.opt.laststatus = 3
+
 -- 滚动
 vim.opt.scrolloff = 8              -- 光标距离屏幕上下边缘至少 8 行时开始滚动
 vim.opt.sidescrolloff = 8          -- 光标距离屏幕左右边缘至少 8 列时开始滚动
