@@ -100,6 +100,7 @@ nvim/
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 | [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
+| [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（含 nvim-notify） | `<leader>sn*` |
 
 
 ## Keybindings
