@@ -19,6 +19,8 @@ return {
                 view = "cmdline_popup",         -- : 命令行居中浮窗
             },
             lsp = {
+                -- LSP 进度条：clangd 等索引大项目时右下角显示进度，不刷屏
+                progress = { enabled = true },
                 -- 用 treesitter 高亮 LSP 悬浮/签名里的 markdown 与代码
                 override = {
                     ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
