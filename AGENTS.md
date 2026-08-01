@@ -6,6 +6,8 @@
 
 **规则**: 新增任何配置（插件、快捷键、选项）必须在对应文件中写注释说明用途。每个 keymap 必须带 `desc`。
 
+**验证（强制）**: 任何修改 nvim 配置的改动，提交前必须实际运行 nvim 验证，禁止未运行就声称"已生效/已修复"。最快方式：运行 `skills/verify-nvim-config/verify.sh`（语法校验 + 启动烟测）；涉及键位 / UI / 终端 / 命令的改动，再按 `skills/verify-nvim-config/SKILL.md` 用 tmux 真实会话验证。
+
 ## Requirements
 
 ### 系统依赖
