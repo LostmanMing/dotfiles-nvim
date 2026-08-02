@@ -30,6 +30,66 @@ local function art_section(self)
     }
 end
 
+-- 初号机配色：色值直接从 scripts/eva01-source.png 取样，不是凭感觉调的
+local EVA = {
+    purple = "#9888d1",     -- 机体主色
+    yellow = "#e3c645",     -- 下颚 / 角
+    green  = "#67a659",     -- 装甲配件
+}
+
+-- 底部启动耗时。不用内置 startup 段：它把图标和文字放进同一个 chunk，没法分开上色。
+-- 数据来源相同（lazy.stats）。padding 是 {底部, 顶部}，留一行和菜单分开。
+local function startup_section()
+    local stats = require("lazy.stats").stats()
+    local ms = math.floor(stats.startuptime * 100 + 0.5) / 100
+    return {
+        align = "center",
+        padding = { 0, 1 },
+        text = {
+            { "⚡ ", hl = "EvaYellow" },
+            { "Neovim loaded ", hl = "EvaGreen" },
+            { stats.loaded .. "/" .. stats.count, hl = "EvaPurple" },
+            { " plugins in ", hl = "EvaGreen" },
+            { ms .. "ms", hl = "EvaPurple" },
+        },
+    }
+end
+
+-- 启动页菜单：多项排一行省空间。
+-- 不用内置 keys 段（它一项一行、占太高），改成自己排版的文本 + hidden 项：
+-- hidden 项不渲染但按键照样注册，排版与按键因此解耦。
+local MENU = {
+    { "f", "find file", ":Telescope find_files" },
+    { "n", "new file",  ":ene | startinsert" },
+    { "g", "find text", ":Telescope live_grep" },
+    { "c", "config",    ":e " .. vim.fn.stdpath("config") .. "/init.lua" },
+    { "l", "lazy",      ":Lazy" },
+    -- snacks 默认把启动页的 q 映射成 :bd，这里覆盖成整体退出（item 按键注册在那之后）
+    { "q", "quit",      ":qa" },
+}
+local MENU_COLS, CELL_W = 3, 21     -- 3 列 × 21 宽 = 63，正好放进 64 宽的版面
+
+local function menu_section()
+    local items = {}
+    for row = 1, math.ceil(#MENU / MENU_COLS) do
+        local text = {}
+        for col = 1, MENU_COLS do
+            local m = MENU[(row - 1) * MENU_COLS + col]
+            if m then
+                table.insert(text, { " " .. m[1] .. "  ", hl = "EvaYellow" })
+                table.insert(text, { m[2] .. string.rep(" ", CELL_W - 4 - #m[2]), hl = "EvaPurple" })
+            end
+        end
+        -- 每行左对齐：版面整体仍居中，但末行格子数少，逐行居中会导致列对不齐
+        -- 第一行加两个顶部空行，和上面的图分开
+        table.insert(items, { align = "left", text = text, padding = row == 1 and { 0, 2 } or nil })
+    end
+    for _, m in ipairs(MENU) do
+        table.insert(items, { key = m[1], action = m[3], hidden = true })
+    end
+    return items
+end
+
 -- 当前作用域竖线按嵌套深度取色（onedark 调色板）：
 -- 只有光标所在的那个作用域会上色，其它缩进层级保持默认灰色，不至于满屏彩线
 local SCOPE_COLORS = {
@@ -51,8 +111,12 @@ return {
         lazy = false,
         opts = {
             dashboard = {
-                -- 启动页只放图，不显示菜单/启动耗时
-                sections = { art_section },
+                -- 图 + 菜单 + 底部启动耗时（初号机配色）
+                sections = {
+                    art_section,
+                    menu_section,
+                    startup_section,
+                },
             },
             indent = {
                 indent = { char = "│" },        -- 普通层级：默认灰色，不上色
@@ -74,7 +138,11 @@ return {
         config = function(_, opts)
             require("snacks").setup(opts)
             -- 用 Snacks.util.set_hl 而非 nvim_set_hl：它托管高亮组，换 colorscheme 后自动重挂
-            local hl = {}
+            local hl = {
+                EvaYellow = { fg = EVA.yellow },
+                EvaPurple = { fg = EVA.purple, bold = true },
+                EvaGreen = { fg = EVA.green },
+            }
             for _, c in ipairs(SCOPE_COLORS) do
                 hl[c[1]] = { fg = c[2], bold = true }
             end
