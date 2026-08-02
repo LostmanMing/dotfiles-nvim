@@ -1,5 +1,6 @@
--- 启动页（snacks.nvim dashboard）：开 nvim 不带文件参数时显示
--- 只启用 dashboard 模块，snacks 其它模块保持关闭，避免和现有插件重叠
+-- snacks.nvim：收编几个原本各自一个插件的小功能
+-- 启用 dashboard（启动页）、indent（缩进线）、notifier（通知）、scroll（平滑滚动）、bigfile（大文件降级）
+-- snacks 所有模块默认全关，opts 里出现哪个 key 才启用哪个，所以没列的模块一行代码都不跑
 
 -- 图案：EVA 初号机头（彩色盲文点阵，含 ANSI 256 色码）
 -- 由 ascii-image-converter -C --color-bg -b 预生成，源图 scripts/eva01-source.png
@@ -38,6 +39,28 @@ return {
                 -- 启动页只放图，不显示菜单/启动耗时
                 sections = { art_section },
             },
+            indent = {
+                indent = { char = "│" },        -- 各缩进层级：细灰竖线
+                scope = {
+                    char = "┃",                -- 光标所在作用域用粗字形区分
+                },
+                -- 关掉动画，保持和原来 indent-blankline 一致的静态观感
+                animate = { enabled = false },
+            },
+            notifier = {
+                timeout = 2500,
+                top_down = false,               -- 通知从右下往上堆
+                -- 注：原来 nvim-notify 的 stages="fade" 没有对应项，snacks 通知无动画
+                -- style 默认已是 compact，与原配置一致
+            },
+            scroll = {},                        -- 平滑滚动（与 smear-cursor 抢同一事件，后者已禁用）
+            bigfile = {},                       -- 大文件自动关掉 treesitter/补全等重功能
         },
+        config = function(_, opts)
+            require("snacks").setup(opts)
+            -- 作用域竖线：亮蓝加粗（主题默认色太淡，看不出当前代码块）
+            -- 用 Snacks.util.set_hl 而非 nvim_set_hl：它托管高亮组，换 colorscheme 后自动重挂
+            Snacks.util.set_hl({ SnacksIndentScope = { fg = "#61afef", bold = true } })
+        end,
     },
 }

@@ -4,15 +4,8 @@ return {
         event = "VeryLazy",
         dependencies = {
             "MunifTanjim/nui.nvim",
-            {
-                "rcarriga/nvim-notify",
-                opts = {
-                    stages = "fade",           -- 淡入淡出（比 slide 更省，SSH 下更顺）
-                    timeout = 2500,
-                    render = "compact",
-                    top_down = false,          -- 通知从右下往上堆
-                },
-            },
+            -- 通知后端交给 snacks.notifier：noice 的 notify 视图里 snacks 后端优先级
+            -- 在 nvim-notify 之前，启用了就自动走它，所以这里不再依赖 nvim-notify
         },
         opts = {
             cmdline = {

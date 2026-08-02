@@ -10,6 +10,7 @@ return {
                 { "<leader>t", group = "terminal" },
                 { "<leader>x", group = "diagnostics" },
                 { "<leader>c", group = "code" },
+                { "<leader>m", group = "markdown" },
             },
         },
     },

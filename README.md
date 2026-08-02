@@ -100,7 +100,10 @@ nvim/
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 | [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
-| [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（含 nvim-notify） | `<leader>sn*` |
+| [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（后端用 snacks.notifier） | `<leader>sn*` |
+| [snacks.nvim](https://github.com/folke/snacks.nvim) | 启动页（EVA 初号机图案）、缩进线、通知、平滑滚动、大文件降级 | - |
+| [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | TODO/FIX/HACK 等注释关键词高亮与检索 | `]t/[t`, `<leader>xt/ft` |
+| [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | Markdown 在编辑器内渲染（标题/表格/复选框） | `<leader>mt` |
 
 
 ## Keybindings
@@ -168,6 +171,24 @@ nvim/
 | `<leader>gb` | Blame 当前行 |
 | `<leader>gd` | Diff against index |
 | `[c` / `]c` | 上一个 / 下一个 hunk |
+
+### TODO 注释
+
+| Key | Action |
+|-----|--------|
+| `]t` / `[t` | 下一个 / 上一个 TODO |
+| `<leader>xt` | TODO 列表（Trouble 面板） |
+| `<leader>ft` | 搜索 TODO（Telescope，需要 ripgrep） |
+
+支持的关键词：`TODO` `FIX` `HACK` `WARN` `PERF` `NOTE` `TEST`
+
+### Markdown
+
+| Key | Action |
+|-----|--------|
+| `<leader>mt` | 切换 markdown 渲染（看原始文本） |
+
+打开 `.md` 文件自动渲染标题、表格、复选框、引用和代码块；进插入模式自动显示原始文本。
 
 ### Flash 快速跳转
 
