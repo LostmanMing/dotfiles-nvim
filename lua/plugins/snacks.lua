@@ -30,19 +30,19 @@ local function art_section(self)
     }
 end
 
--- 缩进线按层级循环上色（onedark 调色板）：数嵌套层级比单一灰色直观
--- 复用 snacks 自带的 SnacksIndentN 组名，覆盖它的默认色（默认只在 4 个诊断色间循环）
-local INDENT_COLORS = {
-    { "SnacksIndent1", "#e06c75" },     -- 红
-    { "SnacksIndent2", "#d19a66" },     -- 橙
-    { "SnacksIndent3", "#e5c07b" },     -- 黄
-    { "SnacksIndent4", "#98c379" },     -- 绿
-    { "SnacksIndent5", "#56b6c2" },     -- 青
-    { "SnacksIndent6", "#61afef" },     -- 蓝
-    { "SnacksIndent7", "#c678dd" },     -- 紫
+-- 当前作用域竖线按嵌套深度取色（onedark 调色板）：
+-- 只有光标所在的那个作用域会上色，其它缩进层级保持默认灰色，不至于满屏彩线
+local SCOPE_COLORS = {
+    { "IndentScope1", "#e06c75" },      -- 红
+    { "IndentScope2", "#d19a66" },      -- 橙
+    { "IndentScope3", "#e5c07b" },      -- 黄
+    { "IndentScope4", "#98c379" },      -- 绿
+    { "IndentScope5", "#56b6c2" },      -- 青
+    { "IndentScope6", "#61afef" },      -- 蓝
+    { "IndentScope7", "#c678dd" },      -- 紫
 }
 
-local indent_hl = vim.tbl_map(function(c) return c[1] end, INDENT_COLORS)
+local scope_hl = vim.tbl_map(function(c) return c[1] end, SCOPE_COLORS)
 
 return {
     {
@@ -55,12 +55,10 @@ return {
                 sections = { art_section },
             },
             indent = {
-                indent = {
-                    char = "│",
-                    hl = indent_hl,             -- 按层级循环上色
-                },
+                indent = { char = "│" },        -- 普通层级：默认灰色，不上色
                 scope = {
                     char = "┃",                -- 光标所在作用域用粗字形区分
+                    hl = scope_hl,              -- 按嵌套深度取色
                 },
                 -- 关掉动画，保持和原来 indent-blankline 一致的静态观感
                 animate = { enabled = false },
@@ -76,13 +74,9 @@ return {
         config = function(_, opts)
             require("snacks").setup(opts)
             -- 用 Snacks.util.set_hl 而非 nvim_set_hl：它托管高亮组，换 colorscheme 后自动重挂
-            local hl = {
-                -- 作用域竖线：改用亮白加粗。原来的亮蓝已经是彩虹里的一级（SnacksIndent6），
-                -- 继续用蓝色会和普通层级混在一起分不出当前代码块。
-                SnacksIndentScope = { fg = "#ffffff", bold = true },
-            }
-            for _, c in ipairs(INDENT_COLORS) do
-                hl[c[1]] = { fg = c[2] }
+            local hl = {}
+            for _, c in ipairs(SCOPE_COLORS) do
+                hl[c[1]] = { fg = c[2], bold = true }
             end
             Snacks.util.set_hl(hl)
         end,
