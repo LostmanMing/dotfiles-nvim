@@ -1,5 +1,6 @@
 -- snacks.nvim：收编几个原本各自一个插件的小功能
--- 启用 dashboard（启动页）、indent（缩进线）、notifier（通知）、scroll（平滑滚动）、bigfile（大文件降级）
+-- 启用 dashboard（启动页）、indent（缩进线）、notifier（通知）、bigfile（大文件降级）
+-- 未启用 scroll（平滑滚动）：与 smear-cursor 的光标拖影抢同一手势，已选后者
 -- snacks 所有模块默认全关，opts 里出现哪个 key 才启用哪个，所以没列的模块一行代码都不跑
 
 -- 图案：EVA 初号机头（彩色盲文点阵，含 ANSI 256 色码）
@@ -53,7 +54,6 @@ return {
                 -- 注：原来 nvim-notify 的 stages="fade" 没有对应项，snacks 通知无动画
                 -- style 默认已是 compact，与原配置一致
             },
-            scroll = {},                        -- 平滑滚动（与 smear-cursor 抢同一事件，后者已禁用）
             bigfile = {},                       -- 大文件自动关掉 treesitter/补全等重功能
         },
         config = function(_, opts)

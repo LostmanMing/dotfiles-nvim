@@ -101,7 +101,7 @@ nvim/
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 | [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
 | [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（后端用 snacks.notifier） | `<leader>sn*` |
-| [snacks.nvim](https://github.com/folke/snacks.nvim) | 启动页（EVA 初号机图案）、缩进线、通知、平滑滚动、大文件降级 | - |
+| [snacks.nvim](https://github.com/folke/snacks.nvim) | 启动页（EVA 初号机图案）、缩进线、通知、大文件降级 | - |
 | [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | TODO/FIX/HACK 等注释关键词高亮与检索 | `]t/[t`, `<leader>xt/ft` |
 | [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | Markdown 在编辑器内渲染（标题/表格/复选框） | `<leader>mt` |
 

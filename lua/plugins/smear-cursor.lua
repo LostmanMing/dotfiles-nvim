@@ -1,10 +1,8 @@
 return {
     {
         "sphamba/smear-cursor.nvim",
-        -- 暂时禁用：snacks.scroll 靠反复恢复插值后的视口做平滑滚动，而那个记录含光标行，
-        -- 一次滚动会被拆成约 20 步、每步都动光标 → smear 会给每一步都画拖影，两层动画叠在同一手势上。
-        -- 想换回光标拖影就把这行删掉，同时关掉 snacks 的 scroll 模块。
-        enabled = false,
+        -- 与 snacks 的 scroll 模块二选一：scroll 靠反复恢复含光标行的插值视口做平滑滚动，
+        -- 一次滚动约 20 步都会触发拖影，两层动画会叠在同一手势上。这里选拖影，故 scroll 不启用。
         event = "VeryLazy",
         opts = {
             -- 光标移动拖影效果
