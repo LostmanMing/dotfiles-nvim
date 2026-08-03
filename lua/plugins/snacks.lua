@@ -147,6 +147,10 @@ return {
                 hl[c[1]] = { fg = c[2], bold = true }
             end
             Snacks.util.set_hl(hl)
+
+            -- inlay hints 开关（从 lsp.lua 迁来）：Snacks.toggle 带通知和 which-key 图标，
+            -- 作用域同为 bufnr=0，行为和原来一致
+            Snacks.toggle.inlay_hints():map("<leader>ci")
         end,
     },
 }

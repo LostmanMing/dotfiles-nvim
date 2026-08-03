@@ -69,12 +69,8 @@ return {
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
 
-            -- ─── inlay hint 开关（<leader>th 已被水平终端占用，改用 code 组）───
-            -- 用当前 buffer 作用域，和 on_attach 里 per-buffer 启用保持一致（避免状态不同步）
-            vim.keymap.set("n", "<leader>ci", function()
-                local b = 0
-                vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = b }), { bufnr = b })
-            end, { desc = "切换 inlay hints（当前 buffer）" })
+            -- inlay hint 开关移到 snacks.lua：用 Snacks.toggle.inlay_hints()（同为 bufnr=0
+            -- 作用域，但多了通知和 which-key 图标），键位仍是 <leader>ci
 
             -- ─── on_attach / capabilities ───
             -- 判断是否真实磁盘文件 buffer：clangd 只支持 file URI，

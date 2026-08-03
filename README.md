@@ -10,7 +10,7 @@ Part of [LostmanMing/dotfiles](https://github.com/LostmanMing/dotfiles).
 - Git
 - A [Nerd Font](https://www.nerdfonts.com/) (for icons)
 - [tree-sitter-cli](https://github.com/tree-sitter/tree-sitter) (for building parsers)
-- [ripgrep](https://github.com/BurntSushi/ripgrep) (for telescope live grep)
+- [ripgrep](https://github.com/BurntSushi/ripgrep) (for telescope live grep & todo-comments search)
 
 ### macOS
 
@@ -55,25 +55,35 @@ nvim/
 │   ├── config/
 │   │   ├── options.lua
 │   │   ├── keymaps.lua
-│   │   └── lazy-setup.lua
+│   │   ├── lazy-setup.lua
+│   │   └── util.lua
 │   └── plugins/
 │       ├── bufferline.lua
 │       ├── cmp.lua
 │       ├── comment.lua
+│       ├── diffview.lua
 │       ├── flash.lua
 │       ├── gitsigns.lua
+│       ├── im-select.lua
 │       ├── lsp.lua
 │       ├── lualine.lua
+│       ├── markdown.lua
+│       ├── noice.lua
 │       ├── nvim-tree.lua
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
+│       ├── sleuth.lua
+│       ├── smear-cursor.lua
+│       ├── snacks.lua
 │       ├── surround.lua
 │       ├── telescope.lua
 │       ├── tmux.lua
+│       ├── todo-comments.lua
 │       ├── toggleterm.lua
 │       ├── treesitter.lua
 │       ├── trouble.lua
 │       └── which-key.lua
+├── scripts/          # 启动页图案资源与生成脚本
 └── lazy-lock.json
 ```
 
@@ -89,21 +99,25 @@ nvim/
 | [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | 侧边文件树 | `Ctrl+n` |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 模糊搜索（文件/文本/buffer/符号） | `<leader>f*` |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
-| [mason.nvim](https://github.com/williamboman/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/th` |
+| [mason.nvim](https://github.com/williamboman/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/ci` |
 | [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) | 自动补全引擎 | `Tab` / `S-Tab` |
 | [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | 代码片段引擎 | - |
 | [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `gcc` 注释行，`gc` + text object 注释范围 | `gcc` |
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | 添加/删除/替换包围字符 | `ys`, `ds`, `cs` |
 | [mini.pairs](https://github.com/echasnovski/mini.pairs) | 自动配对括号和引号 | - |
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | 行号旁 git 增删改标记，hunk 操作 | `<leader>gs/gr/gp/gb/gd` |
+| [diffview.nvim](https://github.com/sindrets/diffview.nvim) | Git diff / 文件历史面板 | `<leader>gv/gV/gh/gH` |
 | [flash.nvim](https://github.com/folke/flash.nvim) | 输入字符屏幕标记，一键跳转 | `<leader>s` / `<leader>S` |
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 | [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
-| [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（后端用 snacks.notifier） | `<leader>sn*` |
+| [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（后端用 snacks.notifier） | `<leader>N*` |
 | [snacks.nvim](https://github.com/folke/snacks.nvim) | 启动页（EVA 初号机图案）、缩进线、通知、大文件降级 | - |
 | [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | TODO/FIX/HACK 等注释关键词高亮与检索 | `]t/[t`, `<leader>xt/ft` |
 | [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | Markdown 在编辑器内渲染（标题/表格/复选框） | `<leader>mt` |
+| [smear-cursor.nvim](https://github.com/sphamba/smear-cursor.nvim) | 光标移动拖影动画 | - |
+| [im-select.nvim](https://github.com/keaising/im-select.nvim) | 离开插入模式自动切回英文输入法 | - |
+| [vim-sleuth](https://github.com/tpope/vim-sleuth) | 按文件自动检测缩进宽度 | - |
 
 
 ## Keybindings
@@ -115,7 +129,6 @@ nvim/
 | `<Space>` | Leader key |
 | `jj` | 退出插入模式 |
 | `q` | 智能关闭（浮窗 → split → buffer → 全部退出） |
-| `gb` | 切回上一个 buffer |
 | `<Esc>` | 清除搜索高亮 |
 
 ### 窗口
@@ -124,14 +137,16 @@ nvim/
 |-----|--------|
 | `<C-h/j/k/l>` | 窗口导航（左/下/上/右） |
 | `<S-Up/Down/Left/Right>` | 调整窗口大小 |
+| `\` | 垂直分屏 |
+| `-` | 水平分屏 |
 
 ### Buffer
 
 | Key | Action |
 |-----|--------|
-| `<leader>h` | 上一个 buffer |
-| `<leader>l` | 下一个 buffer |
-| `<leader>q` | 关闭当前 buffer |
+| `H` | 上一个 buffer |
+| `L` | 下一个 buffer |
+| `q` | 关闭当前 buffer（智能关闭） |
 
 ### 文件查找 (Telescope)
 
@@ -151,13 +166,17 @@ nvim/
 | Key | Action |
 |-----|--------|
 | `gd` | 跳转到定义 |
+| `grd` | 跳转到声明 |
+| `grt` | 跳转到类型定义 |
+| `gri` | 跳转到实现 |
 | `grr` | 查找引用 (Telescope) |
+| `grn` | 重命名符号 |
+| `gra` | 代码操作 (code action) |
 | `K` | 悬浮文档 |
 | `gh` | 诊断 / 悬浮文档 |
-| `gra` | 代码操作 (code action) |
 | `<C-k>` (插入模式) | 参数签名提示 |
 | `<leader>cf` | 格式化代码 |
-| `<leader>th` | 切换 inlay hints（参数名显示） |
+| `<leader>ci` | 切换 inlay hints（参数名/类型显示，带通知） |
 | `[d` / `]d` | 上一个 / 下一个诊断 |
 | `<leader>xx` | Trouble 诊断面板 |
 
@@ -171,6 +190,8 @@ nvim/
 | `<leader>gb` | Blame 当前行 |
 | `<leader>gd` | Diff against index |
 | `[c` / `]c` | 上一个 / 下一个 hunk |
+| `<leader>gv` / `<leader>gV` | 打开 / 关闭 Diffview |
+| `<leader>gh` / `<leader>gH` | 当前文件历史 / 仓库历史 |
 
 ### TODO 注释
 
@@ -196,6 +217,16 @@ nvim/
 |-----|--------|
 | `<leader>s` | 输入字符 → 标签标记 → 按标签键跳转 |
 | `<leader>S` | 选中语法节点（函数/类等） |
+| `<leader>j` | 给下方各行首打标签，按标签跳到某行 |
+| `<leader>k` | 给上方各行首打标签，按标签跳到某行 |
+
+### 通知 / 消息 (Noice)
+
+| Key | Action |
+|-----|--------|
+| `<leader>Nl` | 重新显示最后一条消息 |
+| `<leader>Nh` | 打开消息历史 |
+| `<leader>Nd` | 清掉当前所有通知 |
 
 ### Treesitter 文本对象 & 跳转
 
@@ -227,6 +258,7 @@ nvim/
 |-----|--------|
 | `<C-n>` | 新建终端（继承当前方向） |
 | `<C-]>` | 切换到下一个终端（环形） |
+| `gf` / `gF` | 在编辑窗口打开光标下的文件 |
 | `<Esc>` | 退出到 normal 模式 |
 
 ### 文件树 (nvim-tree)
@@ -240,3 +272,16 @@ nvim/
 | `a` (树上) | 新建文件/目录 |
 | `r` (树上) | 重命名 |
 | `d` (树上) | 删除 |
+
+### 启动页 (Dashboard)
+
+不带文件参数运行 `nvim` 时显示（EVA 初号机图案）。以下按键仅在启动页生效：
+
+| Key | Action |
+|-----|--------|
+| `f` | 找文件 (Telescope) |
+| `n` | 新建文件 |
+| `g` | 全局搜文本 (live grep) |
+| `c` | 打开配置 (init.lua) |
+| `l` | 打开 Lazy 面板 |
+| `q` | 退出 Neovim |

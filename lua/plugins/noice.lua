@@ -36,9 +36,11 @@ return {
             },
         },
         keys = {
-            { "<leader>snl", function() require("noice").cmd("last") end, desc = "Noice 最近消息" },
-            { "<leader>snh", function() require("noice").cmd("history") end, desc = "Noice 消息历史" },
-            { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "关闭所有通知" },
+            -- 从 <leader>sn* 移到 <leader>N*：原来 <leader>s（flash）是它们的前缀，
+            -- 每次 flash 跳转都要等 300ms 才能确定不是在敲 <leader>sn*
+            { "<leader>Nl", function() require("noice").cmd("last") end, desc = "Noice 最近消息" },
+            { "<leader>Nh", function() require("noice").cmd("history") end, desc = "Noice 消息历史" },
+            { "<leader>Nd", function() require("noice").cmd("dismiss") end, desc = "关闭所有通知" },
         },
     },
 }

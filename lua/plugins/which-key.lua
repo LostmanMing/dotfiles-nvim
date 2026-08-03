@@ -11,6 +11,7 @@ return {
                 { "<leader>x", group = "diagnostics" },
                 { "<leader>c", group = "code" },
                 { "<leader>m", group = "markdown" },
+                { "<leader>N", group = "notifications" },
             },
         },
     },
