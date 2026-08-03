@@ -1,1 +1,5 @@
 .qoder/
+
+# nvim 崩溃转储：单个可达数 GB，误提交会把仓库撑爆
+core
+core.*
