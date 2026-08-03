@@ -133,6 +133,23 @@ return {
                 -- 注：原来 nvim-notify 的 stages="fade" 没有对应项，snacks 通知无动画
                 -- style 默认已是 compact，与原配置一致
             },
+            -- 光标停住时用 LSP documentHighlight 高亮同一符号的所有出现位置，
+            -- 改名前先扫一眼影响范围很方便。跳转键位在下面 config 里注册（模块本身不建键位）
+            words = {
+                debounce = 200,                 -- 比 updatetime(300) 短，光标停下就出高亮
+            },
+            -- 接管 statuscolumn：把 git 标记从最左边挪到行号右侧、紧贴代码，
+            -- 定位改动行时视线不用在行号和代码之间来回跳。
+            -- 左右各住着什么（实测）：
+            --   left  = todo-comments 的 TODO/FIX/HACK 图标（它默认 signs=true）+ m{a-z} 书签
+            --   right = 折叠箭头 + gitsigns 的 ▎ 标记
+            -- 左边没标记时看着是空的，但那是预留位不是浪费：实测两种布局（分区 / 全放右边）
+            -- gutter 都是 6 列，snacks 按固定宽度补齐，否则标记一出现代码就会左右抖动。
+            statuscolumn = {
+                left = { "mark", "sign" },      -- 注解类：TODO 图标、书签
+                right = { "fold", "git" },      -- 结构与版本控制类：折叠箭头、git 标记
+                folds = { open = true },        -- 显示折叠展开/收起箭头（可折的行才画）
+            },
             bigfile = {},                       -- 大文件自动关掉 treesitter/补全等重功能
         },
         config = function(_, opts)
@@ -151,6 +168,14 @@ return {
             -- inlay hints 开关（从 lsp.lua 迁来）：Snacks.toggle 带通知和 which-key 图标，
             -- 作用域同为 bufnr=0，行为和原来一致
             Snacks.toggle.inlay_hints():map("<leader>ci")
+
+            -- words 的引用跳转：占 ]]/[[ 是因为原生的 section 移动基本用不到，
+            -- 且不与已有的 ]c(hunk) / ]f(函数) / ]t(todo) / ]p(参数) 撞键
+            for key, dir in pairs({ ["]]"] = 1, ["[["] = -1 }) do
+                vim.keymap.set({ "n", "x", "o" }, key, function()
+                    Snacks.words.jump(dir, true)    -- true: 循环，跳到末尾后回到第一个
+                end, { desc = dir == 1 and "下一处引用" or "上一处引用" })
+            end
         end,
     },
 }
