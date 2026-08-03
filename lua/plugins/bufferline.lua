@@ -30,6 +30,17 @@ return {
         opts = {
             options = {
                 diagnostics = "nvim_lsp",   -- 标签上显示 LSP 诊断标记
+                -- 斜切分隔：与 lualine 的尖箭头 section_separators 同一套视觉语言
+                separator_style = "slope",
+                -- 当前标签用下划线标记，比默认的左侧竖条(▎)更干净，也不占标签内宽度
+                indicator = { style = "underline" },
+                -- 默认只显示数字，改成图标+数量，与 lualine 的诊断段图标保持一致
+                diagnostics_indicator = function(_, _, diags)
+                    local parts = {}
+                    if diags.error then parts[#parts + 1] = " " .. diags.error end
+                    if diags.warning then parts[#parts + 1] = " " .. diags.warning end
+                    return table.concat(parts, " ")
+                end,
                 offsets = {                  -- 给 nvim-tree 侧栏留出区域
                     {
                         filetype = "NvimTree",

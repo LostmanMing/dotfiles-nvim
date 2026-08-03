@@ -84,6 +84,7 @@ vim.opt.smartcase = true           -- 但如果搜索词包含大写字母，则
 -- 窗口分割
 vim.opt.splitbelow = true          -- :split  新窗口开在下方
 vim.opt.splitright = true          -- :vsplit 新窗口开在右侧
+vim.opt.splitkeep = "screen"       -- 开关分屏时保持已有窗口的屏幕行不动（默认 cursor 会让文本上下跳一下）
 
 -- 文件安全
 vim.opt.swapfile = false           -- 不产生 .swp 交换文件（减少磁盘杂物）
@@ -91,11 +92,20 @@ vim.opt.backup = false             -- 不产生 ~ 备份文件
 vim.opt.undofile = true            -- 持久化撤销记录（关掉重开还能 u 撤销）
 
 -- 视觉
-vim.opt.signcolumn = "yes"           -- sign 列：git 标记
+vim.opt.signcolumn = "yes"           -- 保留 sign 列宽度；具体排布由 snacks.statuscolumn 接管
+                                     -- （git 标记在行号右侧，这一列留给 TODO 图标和书签）
 
--- 诊断显示：行尾虚拟文字 + 波浪下划线，不放 W/E 到 sign 列
+-- 全局浮窗边框：一处设置，LSP 悬浮/诊断浮窗/:Lazy/:Mason 等所有浮窗统一圆角
+vim.opt.winborder = "rounded"
+
+-- 诊断显示：只在光标所在行用 virtual_lines 展开——另起一行、用 └── 箭头精确指到出错的列，
+-- 比行尾 virtual_text 好定位（实测超长消息在窗口右边缘仍会截断，完整内容看 gh 或 trouble）。
+-- 关掉 virtual_text：每行行尾都挂一段文字太吵，且会被代码本身挤到看不见。
+-- 非当前行仍有波浪下划线标记位置，数量看 lualine，明细用 <leader>xx (trouble) 或 <leader>fd。
+-- 不放 W/E 到 sign 列：那一列留给 gitsigns。
 vim.diagnostic.config({
-    virtual_text = true,
+    virtual_text = false,
+    virtual_lines = { current_line = true },
     signs = false,
 })
 
@@ -110,6 +120,7 @@ vim.opt.laststatus = 3
 vim.opt.scrolloff = 8              -- 光标距离屏幕上下边缘至少 8 行时开始滚动
 vim.opt.sidescrolloff = 8          -- 光标距离屏幕左右边缘至少 8 列时开始滚动
 vim.opt.wrap = true                -- 长行自动折行，不截断
+vim.opt.smoothscroll = true        -- 折行按屏幕行滚动：wrap 开启时 <C-e>/<C-d> 不再整段跳过长行
 
 -- 响应时间
 vim.opt.updatetime = 300           -- 光标停 0.3 秒后触发 CursorHold 事件（影响 LSP/git 标记刷新速度）
@@ -117,6 +128,8 @@ vim.opt.timeoutlen = 300           -- 按键序列等待时间（如 <leader>ff 
 
 -- 补全菜单
 vim.opt.pumheight = 10             -- 补全弹窗最多显示 10 行
+vim.opt.pumborder = "rounded"      -- 补全弹窗圆角边框，与 winborder 的浮窗风格统一
+vim.opt.pummaxwidth = 60           -- 限制弹窗最大宽度，避免超长补全项（如 C++ 模板签名）撑满屏幕
 vim.opt.completeopt = {            -- 补全行为
     "menuone",                     --   即使只有 1 个匹配也显示菜单
     "noselect",                    --   不自动选中第一项（Enter 不会误选）
