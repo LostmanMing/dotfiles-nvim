@@ -1,7 +1,7 @@
 return {
     -- Mason: LSP installer
     {
-        "williamboman/mason.nvim",
+        "mason-org/mason.nvim",
         lazy = false,
         config = function()
             require("mason").setup({
@@ -20,7 +20,7 @@ return {
     {
         "WhoIsSethDaniel/mason-tool-installer.nvim",
         lazy = false,
-        dependencies = { "williamboman/mason.nvim" },
+        dependencies = { "mason-org/mason.nvim" },
         config = function()
             if vim.fn.executable("tree-sitter") ~= 1 then
                 require("mason-tool-installer").setup({
@@ -32,9 +32,9 @@ return {
 
     -- Mason LSP config integration
     {
-        "williamboman/mason-lspconfig.nvim",
+        "mason-org/mason-lspconfig.nvim",
         lazy = false,
-        dependencies = { "williamboman/mason.nvim" },
+        dependencies = { "mason-org/mason.nvim" },
         config = function()
             local servers = {
                 "lua_ls",
@@ -68,6 +68,9 @@ return {
             vim.keymap.set("n", "<leader>cf", function()
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
+            vim.keymap.set("n", "<leader>ct", function()
+                vim.lsp.document_color.enable(not vim.lsp.document_color.is_enabled(0), 0, { style = "● " })
+            end, { desc = "切换色值圆点" })
 
             -- inlay hint 开关移到 snacks.lua：用 Snacks.toggle.inlay_hints()（同为 bufnr=0
             -- 作用域，但多了通知和 which-key 图标），键位仍是 <leader>ci
@@ -98,6 +101,13 @@ return {
                 if client:supports_method("textDocument/inlayHint") then
                     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
                 end
+                -- 色值预览是 0.12 内置能力（不需要 nvim-highlight-colors 这类插件）。
+                -- 但默认 style="background" 会把色值文字整段涂成色块并把前景反白，
+                -- 直接盖掉 treesitter 的字符串高亮；改成在色值前面加一个该颜色的圆点，
+                -- 原文的语法高亮保持不变。
+                if client:supports_method("textDocument/documentColor") then
+                    vim.lsp.document_color.enable(true, bufnr, { style = "● " })
+                end
                 -- 参数签名自动触发：仅在支持 signatureHelp 的 buffer 上，限定 buffer-local
                 if client:supports_method("textDocument/signatureHelp") then
                     vim.api.nvim_clear_autocmds({ group = sig_group, buffer = bufnr })
@@ -114,9 +124,11 @@ return {
                 end
             end
 
-            local capabilities = require("cmp_nvim_lsp").default_capabilities()
+            -- 补全 capabilities 不用手动传：blink.cmp 在 0.11+ 会自己调
+            -- vim.lsp.config('*', { capabilities = ... })，而 vim.lsp.config 会把 '*'
+            -- 的配置合并进每个具体 server，所以下面只需要给 on_attach。
 
-            -- clangd 自定义 cmd：在通用循环 enable 之前设置，循环会合并 on_attach/capabilities
+            -- clangd 自定义 cmd：在通用循环 enable 之前设置，循环会合并 on_attach
             vim.lsp.config("clangd", {
                 cmd = {
                     "clangd",
@@ -132,11 +144,10 @@ return {
                 },
             })
 
-            -- ─── 通用 server 启用（继承 nvim-lspconfig 预设 + 追加 capabilities/on_attach）───
+            -- ─── 通用 server 启用（继承 nvim-lspconfig 预设 + 追加 on_attach）───
             for _, server in ipairs(servers) do
                 vim.lsp.config(server, {
                     on_attach = on_attach,
-                    capabilities = capabilities,
                 })
                 vim.lsp.enable(server)
             end
@@ -147,6 +158,6 @@ return {
     {
         "neovim/nvim-lspconfig",
         lazy = false,
-        dependencies = { "williamboman/mason-lspconfig.nvim" },
+        dependencies = { "mason-org/mason-lspconfig.nvim" },
     },
 }
