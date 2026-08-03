@@ -14,13 +14,13 @@
 
 | 软件 | 用途 | 备注 |
 |------|------|------|
-| Neovim >= 0.11 | 编辑器本身 | 必须 0.11+（LSP 新 API） |
+| Neovim >= 0.12 | 编辑器本身 | nvim-treesitter main 分支要求 0.12+；配置用到 `winborder`/`pumborder`/`virtual_lines`/`vim.lsp.document_color` |
 | Git | 插件管理 | lazy.nvim 需要 |
 | Node.js >= 18 | LSP 运行时 | jsonls, yamlls 等需要 |
 | ripgrep | Telescope live_grep | 搜索加速 |
 | fd | Telescope 文件查找 | 可选，提升性能 |
 | clangd | C/C++ LSP | mason 自动装插件，但 clangd 二进制需系统提供 |
-| tree-sitter-cli | parser 编译器 | npm 或 cargo 安装均可 |
+| tree-sitter-cli >= 0.26.1 | parser 编译器 | **用系统包管理器装，不要用 npm**（treesitter main 分支的明确要求） |
 | Nerd Font | 图标字体 | JetBrainsMono Nerd Font |
 | reattach-to-user-namespace | macOS tmux 剪贴板互通 | `brew install reattach-to-user-namespace` |
 
@@ -28,7 +28,10 @@
 
 部分系统仓库版本可能太旧（如 Ubuntu 的 tree-sitter），应优先检查 `--version`，不满足则源码/二进制安装：
 
-- **tree-sitter-cli**: `npm install -g tree-sitter-cli`
+- **tree-sitter-cli**: 需 >= 0.26.1，且上游要求**不要用 npm 装**。按平台选：
+  `brew install tree-sitter-cli` / `pacman -S tree-sitter-cli` / `cargo install tree-sitter-cli`，
+  或从 [tree-sitter releases](https://github.com/tree-sitter/tree-sitter/releases) 下二进制。
+  Debian/Ubuntu 仓库里的 `tree-sitter` 通常远低于 0.26，别直接 apt。
 - **Neovim**: 下载 GitHub Release 二进制或 appimage
 
 ## Installation

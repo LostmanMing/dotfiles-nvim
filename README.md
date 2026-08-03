@@ -58,10 +58,10 @@ nvim/
 │   │   ├── lazy-setup.lua
 │   │   └── util.lua
 │   └── plugins/
+│       ├── blink.lua
 │       ├── bufferline.lua
-│       ├── cmp.lua
-│       ├── comment.lua
 │       ├── diffview.lua
+│       ├── dropbar.lua
 │       ├── flash.lua
 │       ├── gitsigns.lua
 │       ├── im-select.lua
@@ -72,6 +72,7 @@ nvim/
 │       ├── nvim-tree.lua
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
+│       ├── rainbow.lua
 │       ├── sleuth.lua
 │       ├── smear-cursor.lua
 │       ├── snacks.lua
@@ -80,6 +81,7 @@ nvim/
 │       ├── tmux.lua
 │       ├── todo-comments.lua
 │       ├── toggleterm.lua
+│       ├── treesitter-context.lua
 │       ├── treesitter.lua
 │       ├── trouble.lua
 │       └── which-key.lua
@@ -99,10 +101,12 @@ nvim/
 | [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | 侧边文件树 | `Ctrl+n` |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 模糊搜索（文件/文本/buffer/符号） | `<leader>f*` |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
-| [mason.nvim](https://github.com/williamboman/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/ci` |
-| [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) | 自动补全引擎 | `Tab` / `S-Tab` |
-| [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | 代码片段引擎 | - |
-| [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `gcc` 注释行，`gc` + text object 注释范围 | `gcc` |
+| [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context) | 把当前函数/循环的签名行钉在窗口顶部 | `<leader>cc`, `[C` |
+| [dropbar.nvim](https://github.com/Bekaboo/dropbar.nvim) | 窗口顶部面包屑导航（路径 > 类 > 函数） | `<leader>cb` |
+| [rainbow-delimiters.nvim](https://github.com/HiPhish/rainbow-delimiters.nvim) | 按嵌套深度给括号上色 | - |
+| [mason.nvim](https://github.com/mason-org/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/ci/ct` |
+| [blink.cmp](https://github.com/saghen/blink.cmp) | 自动补全引擎（自带 LSP/路径/buffer/片段源，片段走内置 `vim.snippet`） | `Tab` / `S-Tab` / `CR` |
+| [friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 通用代码片段集合（由 blink 读取） | - |
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | 添加/删除/替换包围字符 | `ys`, `ds`, `cs` |
 | [mini.pairs](https://github.com/echasnovski/mini.pairs) | 自动配对括号和引号 | - |
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | 行号旁 git 增删改标记，hunk 操作 | `<leader>gs/gr/gp/gb/gd` |
@@ -112,7 +116,7 @@ nvim/
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 | [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
 | [noice.nvim](https://github.com/folke/noice.nvim) | 命令行居中浮窗 + 通知美化（后端用 snacks.notifier） | `<leader>N*` |
-| [snacks.nvim](https://github.com/folke/snacks.nvim) | 启动页（EVA 初号机图案）、缩进线、通知、大文件降级 | - |
+| [snacks.nvim](https://github.com/folke/snacks.nvim) | 启动页（EVA 初号机图案）、缩进线、通知、大文件降级、引用高亮、statuscolumn（git 标记移到行号右侧） | `]]/[[`, `<leader>ci` |
 | [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | TODO/FIX/HACK 等注释关键词高亮与检索 | `]t/[t`, `<leader>xt/ft` |
 | [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | Markdown 在编辑器内渲染（标题/表格/复选框） | `<leader>mt` |
 | [smear-cursor.nvim](https://github.com/sphamba/smear-cursor.nvim) | 光标移动拖影动画 | - |
@@ -177,6 +181,11 @@ nvim/
 | `<C-k>` (插入模式) | 参数签名提示 |
 | `<leader>cf` | 格式化代码 |
 | `<leader>ci` | 切换 inlay hints（参数名/类型显示，带通知） |
+| `<leader>ct` | 切换色值圆点（LSP documentColor，0.12 内置） |
+| `<leader>cc` | 切换粘性上下文（顶部钉住函数签名） |
+| `<leader>cb` | 面包屑交互选择（在层级间跳转） |
+| `[C` | 跳到当前上下文起始行 |
+| `]]` / `[[` | 下一处 / 上一处引用（同一符号） |
 | `[d` / `]d` | 上一个 / 下一个诊断 |
 | `<leader>xx` | Trouble 诊断面板 |
 
