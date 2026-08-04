@@ -72,7 +72,6 @@ nvim/
 │       ├── nvim-tree.lua
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
-│       ├── rainbow.lua
 │       ├── sleuth.lua
 │       ├── smear-cursor.lua
 │       ├── snacks.lua
@@ -103,7 +102,6 @@ nvim/
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
 | [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context) | 把当前函数/循环的签名行钉在窗口顶部 | `<leader>cc`, `[C` |
 | [dropbar.nvim](https://github.com/Bekaboo/dropbar.nvim) | 窗口顶部面包屑导航（路径 > 类 > 函数） | `<leader>cb` |
-| [rainbow-delimiters.nvim](https://github.com/HiPhish/rainbow-delimiters.nvim) | 按嵌套深度给括号上色 | - |
 | [mason.nvim](https://github.com/mason-org/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/ci/ct` |
 | [blink.cmp](https://github.com/saghen/blink.cmp) | 自动补全引擎（自带 LSP/路径/buffer/片段源，片段走内置 `vim.snippet`） | `Tab` / `S-Tab` / `CR` |
 | [friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 通用代码片段集合（由 blink 读取） | - |
