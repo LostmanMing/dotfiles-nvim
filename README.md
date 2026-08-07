@@ -6,11 +6,13 @@ Part of [LostmanMing/dotfiles](https://github.com/LostmanMing/dotfiles).
 
 ## Requirements
 
-- Neovim >= 0.11
+- Neovim >= 0.12（`vim.ui.clipboard.osc52`、`winborder`、`vim.lsp.document_color`、treesitter main 分支都要）
 - Git
 - A [Nerd Font](https://www.nerdfonts.com/) (for icons)
 - [tree-sitter-cli](https://github.com/tree-sitter/tree-sitter) (for building parsers)
-- [ripgrep](https://github.com/BurntSushi/ripgrep) (for telescope live grep & todo-comments search)
+- [ripgrep](https://github.com/BurntSushi/ripgrep) —— telescope 的 `find_files` / `live_grep` 和 todo-comments 都要，**必需**
+
+剪贴板**不需要任何额外工具**（`xclip` / `pbcopy` 都不用）：复制走 OSC 52，在 tmux 内还会经 tmux buffer 与 tmux 侧互通，细节见 `AGENTS.md`。唯一的限制是本地机器复制的内容、远程 normal 模式下 `p` 拿不到，用终端的 Cmd+V 即可。
 
 ### macOS
 
