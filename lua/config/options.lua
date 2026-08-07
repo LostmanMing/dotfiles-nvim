@@ -38,86 +38,73 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
     end,
 })
 
--- 系统剪贴板：OSC 52 当唯一出口，tmux buffer 当中转站
+-- 系统剪贴板：OSC 52 与本地剪贴板工具**并行**，谁通算谁的
 --
---   nvim yank ──OSC52──┐
---                      ├─→ tmux 截获入 buffer ──OSC52 转发──→ 本地机器剪贴板
---   tmux 里按 y ───────┘         │
---                                └──→ nvim 的 p 读 `tmux save-buffer -`
+--   nvim yank ─┬─OSC52──→ tmux 截获入 buffer ──转发──→ 支持 OSC 52 的终端
+--              └─工具───→ xclip/pbcopy/... （给不支持 OSC 52 的终端兜底）
+--   tmux 里按 y ────────→ tmux buffer ──→ nvim 的 p 读 `tmux save-buffer -`
 --
--- **不能用 DISPLAY 判断有没有本地剪贴板**：SSH 开了 X11 转发时 DISPLAY 会是
--- localhost:10.0，那个 X server 的剪贴板既不是你本地机器的、也不进 tmux buffer。
--- 按 DISPLAY 判断会让远程机器错误地走 xclip，结果 nvim 复制的东西 tmux 和本地
--- 都粘不到（实测踩过）。真正的判据是 SSH_CONNECTION / SSH_TTY。
+-- 两条腿都要留。曾经只留 OSC 52、把工具当多余删掉，结果那台本地终端不认 OSC 52 的
+-- 机器直接复制不出去了——它一直靠 SSH X11 转发 + xclip。**不要再删。**
+-- 也不要拿 SSH_CONNECTION 排除工具：远程恰恰是最需要这条兜底的场景。
+--
+-- 但**判断有没有本地剪贴板不能只看 DISPLAY**：以前据此二选一地走 xclip、不发 OSC 52，
+-- 于是 nvim 复制的东西既没进 tmux buffer、也没到本地。现在是并行，不再二选一。
 vim.opt.clipboard = "unnamedplus"
 vim.api.nvim_create_autocmd("VimEnter", {
     once = true, -- 延迟设置，避免被插件覆盖
     callback = function()
         local in_tmux = (vim.env.TMUX or "") ~= ""
-        local is_remote = (vim.env.SSH_CONNECTION or "") ~= "" or (vim.env.SSH_TTY or "") ~= ""
 
-        local copy, paste
-
-        -- 真本地（非 SSH）：直接用系统工具，不绕 OSC 52（Terminal.app 之类并不支持它）。
-        -- 探测只在这个分支里做——远程时探了也用不上。
-        if not is_remote then
-            local c, p
-            if vim.fn.has("mac") == 1 and vim.fn.executable("pbcopy") == 1 then
-                c, p = "pbcopy", "pbpaste"
-            elseif (vim.env.WAYLAND_DISPLAY or "") ~= "" and vim.fn.executable("wl-copy") == 1 then
-                c, p = "wl-copy", "wl-paste --no-newline"
-            elseif (vim.env.DISPLAY or "") ~= "" and vim.fn.executable("xclip") == 1 then
-                c, p = "xclip -selection clipboard", "xclip -selection clipboard -o"
-            end
-            if c then
-                copy = { ["+"] = c, ["*"] = c }
-                paste = { ["+"] = p, ["*"] = p }
-            end
+        -- 本地剪贴板工具，argv 形式（copy 用 vim.system 异步写，paste 用命令字符串）
+        local tool_copy, tool_paste
+        if vim.fn.executable("pbcopy") == 1 then
+            tool_copy, tool_paste = { "pbcopy" }, "pbpaste"
+        elseif (vim.env.WAYLAND_DISPLAY or "") ~= "" and vim.fn.executable("wl-copy") == 1 then
+            tool_copy, tool_paste = { "wl-copy" }, "wl-paste --no-newline"
+        elseif (vim.env.DISPLAY or "") ~= "" and vim.fn.executable("xclip") == 1 then
+            tool_copy = { "xclip", "-selection", "clipboard" }
+            tool_paste = "xclip -selection clipboard -o"
+        elseif vim.fn.executable("clip.exe") == 1 then
+            tool_copy, tool_paste = { "clip.exe" }, nil
         end
 
-        -- 其余情况（远程，或本地但没有可用工具）：复制走内置 OSC 52，零 fork。
-        -- 在 tmux 内会被 tmux 一并写进它自己的 buffer 再转发给外层终端，一次到位
-        -- （前提是 tmux 的 set-clipboard 为 on，改成 external 就不入 buffer，
-        -- nvim ↔ tmux 那条腿会断）。
-        if not copy then
-            local osc52 = require("vim.ui.clipboard.osc52")
-            if in_tmux then
-                -- 有 tmux 就不需要自己缓存：粘贴直接读 tmux buffer，既能拿到 nvim
-                -- 自己 yank 的（已被 tmux 截获入库），也能拿到 tmux copy-mode 里按 y
-                -- 复制的，两个来源在这里统一
-                local from_tmux = { "tmux", "save-buffer", "-" }
-                copy = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") }
-                paste = { ["+"] = from_tmux, ["*"] = from_tmux }
-            else
-                -- 裸 SSH 且没开 tmux：**不用 osc52.paste**，它要等终端回应 OSC 52 读，
-                -- 而绝大多数终端出于安全不回——runtime 源码里写死先等 1s 再等 9s，
-                -- 每次 p 都会卡住。退化成会话内缓存：yank 照样能到本地剪贴板，
-                -- 粘贴取自己刚复制的内容。
-                local lines, regtype = { "" }, "v"
-                local function wrap(reg)
-                    local send = osc52.copy(reg)
-                    return function(l, rt)
-                        lines, regtype = l, rt
-                        send(l, rt)
-                    end
+        -- 复制：OSC 52 + 工具，两条都发。OSC 52 零 fork 且在 tmux 内会被截获入 buffer，
+        -- 工具那份只有存在时才多一次异步 spawn（失败也无所谓，另一条还在）。
+        local osc52 = require("vim.ui.clipboard.osc52")
+        local cache_lines, cache_regtype = { "" }, "v"
+        local function make_copy(reg)
+            local send = osc52.copy(reg)
+            return function(lines, regtype)
+                cache_lines, cache_regtype = lines, regtype
+                send(lines, regtype)
+                if tool_copy then
+                    pcall(vim.system, tool_copy, { stdin = table.concat(lines, "\n") })
                 end
-                local function from_cache()
-                    return lines, regtype
-                end
-                copy = { ["+"] = wrap("+"), ["*"] = wrap("*") }
-                paste = { ["+"] = from_cache, ["*"] = from_cache }
             end
         end
+        local copy = { ["+"] = make_copy("+"), ["*"] = make_copy("*") }
 
-        local mode, degraded
-        if type(copy["+"]) == "string" then
-            mode = "系统工具（本地）：" .. copy["+"]
-        elseif in_tmux then
-            mode = "OSC 52 复制 + tmux buffer 粘贴"
+        -- 粘贴优先级：tmux buffer（能同时拿到 nvim 自己的 yank 和 tmux 侧的复制）
+        -- > 本地工具 > 会话内缓存
+        local paste, mode, degraded
+        if in_tmux then
+            local from_tmux = { "tmux", "save-buffer", "-" }
+            paste = { ["+"] = from_tmux, ["*"] = from_tmux }
+            mode = "OSC 52" .. (tool_copy and " + " .. tool_copy[1] or "") .. " 复制，tmux buffer 粘贴"
+        elseif tool_paste then
+            paste = { ["+"] = tool_paste, ["*"] = tool_paste }
+            mode = "OSC 52 + " .. tool_copy[1] .. " 复制，" .. tool_copy[1] .. " 粘贴"
         else
-            mode = "OSC 52 复制 + 会话内缓存粘贴"
-            degraded = "剪贴板降级：远程会话但没开 tmux。复制照样能到本地剪贴板，"
-                .. "但 p 只能取回本次 nvim 自己复制的内容。开 tmux 即可与 tmux buffer 互通。"
+            -- **不用 osc52.paste**：它等终端回应 OSC 52 读，多数终端出于安全不回，
+            -- runtime 源码里写死先等 1s 再等 9s，每次 p 都会卡住。
+            local function from_cache()
+                return cache_lines, cache_regtype
+            end
+            paste = { ["+"] = from_cache, ["*"] = from_cache }
+            mode = "OSC 52 复制，会话内缓存粘贴"
+            degraded = "剪贴板降级：没开 tmux、也没有可用的本地剪贴板工具。复制照样会发 "
+                .. "OSC 52，但 p 只能取回本次 nvim 自己复制的内容。开 tmux 即可与 tmux buffer 互通。"
         end
 
         vim.g.clipboard = {
@@ -149,11 +136,13 @@ vim.api.nvim_create_autocmd("VimEnter", {
         -- 多机环境下常要确认「这台到底走的哪条路」，给个按需自查的命令
         vim.api.nvim_create_user_command("ClipboardInfo", function()
             vim.notify(
-                ("通路：%s\n远程（SSH）：%s\ntmux 内：%s\n\n本地终端收不收 OSC 52 检测不到，"):format(
+                ("通路：%s\ntmux 内：%s\n本地剪贴板工具：%s\n\n"):format(
                     mode,
-                    is_remote and "是" or "否",
-                    in_tmux and "是" or "否"
-                ) .. "要验就复制一段再到本地按 Cmd+V。",
+                    in_tmux and "是" or "否",
+                    tool_copy and table.concat(tool_copy, " ") or "无（只靠 OSC 52）"
+                )
+                    .. "OSC 52 和工具是并行的，谁通算谁的。终端收不收 OSC 52 检测不到，"
+                    .. "要验就复制一段再到本地按 Cmd+V。",
                 degraded and vim.log.levels.WARN or vim.log.levels.INFO,
                 { title = "Clipboard" }
             )

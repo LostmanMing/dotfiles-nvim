@@ -57,18 +57,20 @@
 
 | 方向 | 走什么 |
 |------|--------|
-| 复制 | 内置 `vim.ui.clipboard.osc52` 的 `copy`，**零 fork**。在 tmux 内会被 tmux 截获写进它自己的 buffer 再转发给外层终端，一次到位 |
+| 复制 | **两条并行**：内置 `vim.ui.clipboard.osc52` 的 `copy`（零 fork，在 tmux 内会被 tmux 截获写进它自己的 buffer 再转发出去）**加上**探到的本地工具（`pbcopy`/`wl-copy`/`xclip`/`clip.exe`，用 `vim.system` 异步写）。谁通算谁的 |
 | 粘贴（tmux 内） | `tmux save-buffer -` —— 能同时拿到 nvim 自己 yank 的和 tmux copy-mode 里 `y` 复制的 |
-| 粘贴（真本地，非 SSH） | `pbpaste` / `wl-paste` / `xclip -o` |
-| 粘贴（裸 SSH 无 tmux） | 会话内缓存 |
+| 粘贴（无 tmux 但有工具） | `pbpaste` / `wl-paste` / `xclip -o` |
+| 粘贴（都没有） | 会话内缓存 |
 
 三条**不能改**的地方，都是踩过的：
 
-1. **不能用 `DISPLAY` 判断有没有本地剪贴板。** SSH 开 X11 转发时 `DISPLAY` 会是 `localhost:10.0`，旧配置据此判定「有图形环境」→ 走 `xclip`，但那个 X server 的剪贴板既不是你本地机器的、也不进 tmux buffer，结果 nvim 复制的东西 tmux 和本地都粘不到。真正的判据是 `SSH_CONNECTION` / `SSH_TTY`。
-2. **不能用 `osc52.paste`。** 它发 OSC 52 读请求后等终端回应，而绝大多数终端出于安全不回——runtime 源码里写死先等 1s、再等 9s，每次 `p` 都会卡住。所以裸 SSH 无 tmux 时退化成会话内缓存：yank 照样能到本地剪贴板，粘贴取自己刚复制的。
+1. **复制必须两条都发，不能二选一。** 曾经改成「有 `DISPLAY` 就只走 `xclip`」，结果 nvim 复制的东西既没进 tmux buffer 也没到本地；后来又反过来「远程就只发 OSC 52、不用工具」，结果那台本地终端**不接受 OSC 52** 的机器（一直靠 SSH X11 转发 + `xclip`）直接复制不出去。两次都是二选一造成的。现在并行，工具失败也不影响 OSC 52 那条。
+2. **不能用 `osc52.paste`。** 它发 OSC 52 读请求后等终端回应，而绝大多数终端出于安全不回——runtime 源码里写死先等 1s、再等 9s，每次 `p` 都会卡住。
 3. **`cache_enabled` 必须是 0。** 开了之后 nvim 只认自己上次复制的内容，tmux copy-mode 里新复制的东西 `p` 不出来。
 
-依赖 tmux 侧 `set-clipboard on`（改成 `external` 就不写 tmux buffer，nvim ↔ tmux 那条腿会断）。不需要装 `xclip`/`pbcopy`，也不需要 X11 转发。
+依赖 tmux 侧 `set-clipboard on`（改成 `external` 就不写 tmux buffer，nvim ↔ tmux 那条腿会断）。终端支持 OSC 52 时不需要装任何工具；不支持则需要 X11 转发 + `xclip`。
+
+`:ClipboardInfo` 可以随时查当前走的哪条路；只有在「没 tmux 也没工具」这种真降级时才会在启动后弹一条 WARN。**注意有一种问题检测不到**：终端拒收 OSC 52 时复制静默失败，OSC 52 是单向写、拿不到回执，只能手动复制后到本地 Cmd+V 验证。
 
 ## Installation
 

@@ -12,7 +12,7 @@ Part of [LostmanMing/dotfiles](https://github.com/LostmanMing/dotfiles).
 - [tree-sitter-cli](https://github.com/tree-sitter/tree-sitter) (for building parsers)
 - [ripgrep](https://github.com/BurntSushi/ripgrep) —— telescope 的 `find_files` / `live_grep` 和 todo-comments 都要，**必需**
 
-剪贴板**不需要任何额外工具**（`xclip` / `pbcopy` 都不用）：复制走 OSC 52，在 tmux 内还会经 tmux buffer 与 tmux 侧互通，细节见 `AGENTS.md`。唯一的限制是本地机器复制的内容、远程 normal 模式下 `p` 拿不到，用终端的 Cmd+V 即可。
+剪贴板：复制**同时**走 OSC 52 和本地剪贴板工具（`xclip`/`pbcopy` 等，探到才用），谁通算谁的；在 tmux 内还会经 tmux buffer 与 tmux 侧互通。终端支持 OSC 52 就什么都不用装，不支持则需要 X11 转发 + `xclip`。细节见 `AGENTS.md`。唯一的限制是本地机器复制的内容、远程 normal 模式下 `p` 拿不到，用终端的 Cmd+V 即可。
 
 ### macOS
 
