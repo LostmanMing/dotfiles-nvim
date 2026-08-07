@@ -109,6 +109,17 @@ vim.api.nvim_create_autocmd("VimEnter", {
             end
         end
 
+        local mode, degraded
+        if type(copy["+"]) == "string" then
+            mode = "系统工具（本地）：" .. copy["+"]
+        elseif in_tmux then
+            mode = "OSC 52 复制 + tmux buffer 粘贴"
+        else
+            mode = "OSC 52 复制 + 会话内缓存粘贴"
+            degraded = "剪贴板降级：远程会话但没开 tmux。复制照样能到本地剪贴板，"
+                .. "但 p 只能取回本次 nvim 自己复制的内容。开 tmux 即可与 tmux buffer 互通。"
+        end
+
         vim.g.clipboard = {
             name = "osc52+tmux",
             copy = copy,
@@ -117,6 +128,36 @@ vim.api.nvim_create_autocmd("VimEnter", {
             -- tmux copy-mode 里新复制的东西 p 不出来
             cache_enabled = 0,
         }
+
+        -- 只在真正降级时提醒一次。挂 User VeryLazy 而不是就地 notify：noice 是
+        -- VeryLazy 才加载、并把 vim.notify 交给 snacks.notifier，在 VimEnter 里发太早，
+        -- 会走默认通知、被启动信息刷掉。
+        --
+        -- 注意有一种问题**检测不到**：本地终端拒收 OSC 52 时复制会静默失败，
+        -- nvim 这边没有任何回执可查（OSC 52 是单向写）。那种情况只能手动验证——
+        -- 复制一段然后在本地按 Cmd+V。
+        if degraded then
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "VeryLazy",
+                once = true,
+                callback = function()
+                    vim.notify(degraded, vim.log.levels.WARN, { title = "Clipboard" })
+                end,
+            })
+        end
+
+        -- 多机环境下常要确认「这台到底走的哪条路」，给个按需自查的命令
+        vim.api.nvim_create_user_command("ClipboardInfo", function()
+            vim.notify(
+                ("通路：%s\n远程（SSH）：%s\ntmux 内：%s\n\n本地终端收不收 OSC 52 检测不到，"):format(
+                    mode,
+                    is_remote and "是" or "否",
+                    in_tmux and "是" or "否"
+                ) .. "要验就复制一段再到本地按 Cmd+V。",
+                degraded and vim.log.levels.WARN or vim.log.levels.INFO,
+                { title = "Clipboard" }
+            )
+        end, { desc = "显示当前剪贴板通路" })
     end,
 })
 
