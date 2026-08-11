@@ -23,6 +23,11 @@ return {
                 update_focused_file = {
                     enable = true,
                 },
+                filters = {
+                    -- 不隐藏 .gitignore 排除的文件（默认 true=隐藏）。
+                    -- 运行时按 I 可临时切换回隐藏
+                    git_ignored = false,
+                },
                 git = {
                     enable = true,
                     timeout = 2000,           -- git 操作超时（ms）
