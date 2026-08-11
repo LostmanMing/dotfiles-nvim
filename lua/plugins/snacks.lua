@@ -90,16 +90,19 @@ local function menu_section()
     return items
 end
 
--- 当前作用域竖线按嵌套深度取色（onedark 调色板）：
--- 只有光标所在的那个作用域会上色，其它缩进层级保持默认灰色，不至于满屏彩线
+-- 当前作用域竖线按嵌套深度取色：只有光标所在的那个作用域会上色，
+-- 其它缩进层级保持默认灰色，不至于满屏彩线。
+--
+-- 只用青/蓝/紫，**刻意排除红黄绿橙**——它们都带语义，细竖线上很容易被误读成状态提示：
+--   红 #e06c75 = 诊断 Error        黄 #e5c07b = 诊断 Warning
+--   绿 #98c379 = nvim-tree 未跟踪 / diff 新增
+--   橙 #d19a66 距 Warning 黄只有 ΔE 16.1，同样不能留
+-- 实测（CIE Lab ΔE）：青/蓝/紫 距上述语义色都 ≥ 48；三者内部最小间距是
+-- 青↔蓝 ΔE 31，够分开。代价是第 4 层起颜色重复，但同一时刻只画一条线，影响很小。
 local SCOPE_COLORS = {
-    { "IndentScope1", "#e06c75" },      -- 红
-    { "IndentScope2", "#d19a66" },      -- 橙
-    { "IndentScope3", "#e5c07b" },      -- 黄
-    { "IndentScope4", "#98c379" },      -- 绿
-    { "IndentScope5", "#56b6c2" },      -- 青
-    { "IndentScope6", "#61afef" },      -- 蓝
-    { "IndentScope7", "#c678dd" },      -- 紫
+    { "IndentScope1", "#56b6c2" },      -- 青
+    { "IndentScope2", "#61afef" },      -- 蓝
+    { "IndentScope3", "#c678dd" },      -- 紫
 }
 
 local scope_hl = vim.tbl_map(function(c) return c[1] end, SCOPE_COLORS)
