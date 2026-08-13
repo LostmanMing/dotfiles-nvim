@@ -127,10 +127,18 @@ vim.keymap.set("n", "q", function()
         -- 否则 nvim 在删除当前 buffer 时可能让 tree 独占空间
         local cur = vim.api.nvim_get_current_buf()
         local target
-        for _, b in ipairs(listed) do
-            if b ~= cur then
-                target = b
-                break
+        -- 优先回到「刚才来的那个文件」：gd/gf 等跳转会把原文件设成 alternate（#），
+        -- q 关掉跳转目标后就该退回它，而不是编号最小的第一个 buffer
+        local alt = vim.fn.bufnr("#")
+        if alt > 0 and alt ~= cur
+            and vim.api.nvim_buf_is_loaded(alt) and vim.bo[alt].buflisted then
+            target = alt
+        else
+            for _, b in ipairs(listed) do
+                if b ~= cur then
+                    target = b
+                    break
+                end
             end
         end
         if target then
