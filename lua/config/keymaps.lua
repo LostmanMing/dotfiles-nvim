@@ -51,6 +51,43 @@ local function save_all_and_quit()
     vim.cmd("qa!")
 end
 
+-- 关 tab 前先把这个 tab 里改过的 buffer 写盘，然后关。
+-- 背景：tabclose 之后，只属于这个 tab 的 buffer 会变成「活着但哪儿都不列出」的
+-- 僵尸——实测关掉 tab 后那个文件既不 buflisted、也不在 scope 的 cache 里，
+-- 连 <leader>fB 都搜不到（文件本身在磁盘上，重新 <leader>ff 打开即可，不算丢）。
+-- options.lua 的全局 autosave（TextChanged/InsertLeave 等）实际已经覆盖了绝大多数
+-- 情况，这里再写一遍纯粹是给"关掉就够不着了"这条不可逆路径兜底，
+-- 和 save_all_and_quit 在 qa! 前兜一遍是同一个理由。
+-- 在 scope.nvim 下 buflisted 就等于「属于当前 tab」，所以直接扫 buflisted 即可。
+local function save_tab_and_close()
+    for _, b in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.bo[b].buflisted and vim.api.nvim_buf_is_loaded(b) and vim.bo[b].modified
+            and require("config.util").is_writable_file_buf(b) then
+            vim.api.nvim_buf_call(b, function() pcall(vim.cmd, "silent write") end)
+        end
+    end
+    vim.cmd("tabclose")
+end
+
+-- 这个 buffer 在别的 tab 里是否也开着。
+-- 用途：buffer 已经按 tab 隔离（scope.nvim），而 nvim_buf_delete 是**全局**的，
+-- 对着一个两个 tab 都开着的文件按 q，会让它从另一个 tab 里一起消失（实测过：
+-- 在 tab2 关 f1，回 tab1 后 f1 没了）。这种情况只在本 tab 取消列出就够了。
+-- scope.core.cache 是 tab handle -> buffer 列表，scope 自带的 telescope 扩展也读它。
+local function open_in_other_tab(buf)
+    local ok, core = pcall(require, "scope.core")
+    if not ok then return false end
+    local cur_tab = vim.api.nvim_get_current_tabpage()
+    for tab, bufs in pairs(core.cache) do
+        if tab ~= cur_tab and vim.api.nvim_tabpage_is_valid(tab) then
+            for _, b in ipairs(bufs) do
+                if b == buf then return true end
+            end
+        end
+    end
+    return false
+end
+
 vim.keymap.set("n", "q", function()
     -- 光标在 nvim-tree 内 → focus 到右侧代码窗，不关 tree
     if is_tree_buf(0) then
@@ -107,7 +144,9 @@ vim.keymap.set("n", "q", function()
         end
     end
 
-    -- 收集 listed buffer
+    -- 收集 listed buffer。scope.nvim 让 buflisted 本身就是 tab 作用域的
+    -- （切 tab 时把不属于该 tab 的 buffer 置为 unlisted），所以这里照常数全局
+    -- buflisted 就等于"当前 tab 的 buffer"，不需要额外过滤。
     local listed = {}
     for _, b in ipairs(vim.api.nvim_list_bufs()) do
         if vim.bo[b].buflisted and vim.api.nvim_buf_is_loaded(b) then
@@ -128,7 +167,9 @@ vim.keymap.set("n", "q", function()
         local cur = vim.api.nvim_get_current_buf()
         local target
         -- 优先回到「刚才来的那个文件」：gd/gf 等跳转会把原文件设成 alternate（#），
-        -- q 关掉跳转目标后就该退回它，而不是编号最小的第一个 buffer
+        -- q 关掉跳转目标后就该退回它，而不是编号最小的第一个 buffer。
+        -- alternate 是全局的、可能指向别的 tab 的文件，但那种情况下它在当前 tab
+        -- 是 unlisted（scope.nvim 干的），下面的 buflisted 判断已经把它挡掉了。
         local alt = vim.fn.bufnr("#")
         if alt > 0 and alt ~= cur
             and vim.api.nvim_buf_is_loaded(alt) and vim.bo[alt].buflisted then
@@ -143,14 +184,27 @@ vim.keymap.set("n", "q", function()
         end
         if target then
             vim.api.nvim_win_set_buf(0, target)
-            pcall(vim.api.nvim_buf_delete, cur, { force = false })
+            if open_in_other_tab(cur) then
+                vim.bo[cur].buflisted = false    -- 别的 tab 还在用，只在本 tab 隐藏
+            else
+                pcall(vim.api.nvim_buf_delete, cur, { force = false })
+            end
         else
             vim.cmd("bdelete")
         end
     else
-        save_all_and_quit()         -- 最后一个 → 全退（先写盘所有已改 buffer，tree 跟着退）
+        -- 这个 tab 已经没内容可留了（只剩一个窗口、且没有别的 listed buffer）。
+        -- tabclose 必须放在删 buffer 之后：放前面会让「有 2+ 个 tab」时 q 完全
+        -- 关不掉 buffer（buffer 一直堆积），而且在分屏那个 tab 里收到最后一个
+        -- 窗口再按 q 会把你正在用的 tab 关掉、人被丢到另一个 tab 去。
+        -- 想主动关掉某个 tab 用 <leader><Tab>d，不走 q。
+        if vim.fn.tabpagenr("$") > 1 then
+            save_tab_and_close()
+        else
+            save_all_and_quit()     -- 最后一个 → 全退（先写盘所有已改 buffer，tree 跟着退）
+        end
     end
-end, { desc = "智能关闭：tree focus 切回代码 / 浮窗 / split / buffer / 整体退出" })
+end, { desc = "智能关闭：tree focus 切回代码 / 浮窗 / split / tab / buffer / 整体退出" })
 
 -- 自动退出：当除了 nvim-tree（和浮窗）外没有任何窗口在显示内容时整体 qa
 -- 注：不能用 listed buffer 计数判断——预览压缩包等 unlisted buffer 时 listed 会是 0，
@@ -174,6 +228,22 @@ vim.api.nvim_create_autocmd("BufEnter", {
 
 -- jj 退出插入模式（等效 Esc）
 vim.keymap.set("i", "jj", "<Esc>", { desc = "退出插入模式" })
+
+-- ==========================================
+-- Tab（标签页）：想开新文件又不想拆掉当前分屏布局时用
+-- 挂在 <leader><Tab> 而不是 <leader>t——后者已经是 terminal 组。
+-- 切换用原生 gt / gT，开文件到新 tab 用 <leader>ff 再按 <C-t>（telescope 自带
+-- select_tab），都已经能用，不再重复绑。关 tab 用 <leader><Tab>d——不走 q，
+-- 因为 q 是关 buffer 的键，让它同时管 tab 会互相打架（见上面 tabclose 那段注释）。
+-- ==========================================
+vim.keymap.set("n", "<leader><Tab>n", "<cmd>tabnew<CR>", { desc = "新建 tab" })
+vim.keymap.set("n", "<leader><Tab>d", function()
+    if vim.fn.tabpagenr("$") == 1 then
+        vim.notify("只剩一个 tab，不能关", vim.log.levels.WARN, { title = "Tab" })
+        return
+    end
+    save_tab_and_close()
+end, { desc = "关闭当前 tab（先写盘本 tab 的改动）" })
 
 -- 把宏录制移到 gq
 vim.keymap.set("n", "gq", "q", { desc = "开始宏录制" })

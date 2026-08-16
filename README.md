@@ -132,7 +132,7 @@ nvim/
 |-----|--------|
 | `<Space>` | Leader key |
 | `jj` | 退出插入模式 |
-| `q` | 智能关闭（浮窗 → split → buffer → 全部退出） |
+| `q` | 智能关闭（浮窗 → split → tab → buffer → 全部退出） |
 | `<Esc>` | 清除搜索高亮 |
 
 ### 窗口
@@ -144,12 +144,41 @@ nvim/
 | `\` | 垂直分屏 |
 | `-` | 水平分屏 |
 
+### Tab（标签页）
+
+想开新文件又不想拆掉当前分屏布局时用：分屏布局留在原 tab 里，新文件在新 tab 打开。
+多个 tab 时 bufferline 右上角会显示 tab 编号。
+
+**buffer 按 tab 隔离**（scope.nvim）：每个 tab 的 bufferline 只显示在这个 tab 里开过的
+文件，`H`/`L` 也只在本 tab 内循环。没有这层隔离时每个 tab 的 tabline 长得完全一样，
+在临时 tab 里按 `H`/`L` 切到主 tab 的文件后，很容易误以为分屏布局被破坏了。
+
+| Key | Action |
+|-----|--------|
+| `<leader><Tab>n` | 新建 tab |
+| `<leader><Tab>d` | 关闭当前 tab（先写盘本 tab 的改动） |
+| `gt` / `gT` | 下一个 / 上一个 tab（原生） |
+| `<leader>ff` 后 `<C-t>` | 把选中的文件开到新 tab（telescope 自带） |
+| `<leader>fB` | 跨 tab 搜 buffer，选中会跳到它所在的 tab |
+| `:ScopeList` | 排查哪个 buffer 归哪个 tab |
+| `:ScopeMoveBuf` | 把当前 buffer 搬到别的 tab |
+
+几点实测出来的行为，改这块前先看：
+
+- `q` **不会**关 tab——它优先关 split、再关 buffer，只有当这个 tab 连 buffer 都没得
+  显示时才顺带 `tabclose`。所以在分屏那个 tab 里连按 `q` 不会把布局所在的 tab 弄掉。
+  要主动关 tab 用 `<leader><Tab>d`。
+- 同一个文件在两个 tab 都开着时，`q` 只在当前 tab 取消列出、**不真删**。
+  `nvim_buf_delete` 是全局的，真删会让它从另一个 tab 里一起消失。
+- 关掉一个 tab 后，只属于它的 buffer 会变成「活着但哪儿都不列出」，`<leader>fB`
+  也搜不到。文件本身在磁盘上，重新 `<leader>ff` 打开即可。
+
 ### Buffer
 
 | Key | Action |
 |-----|--------|
-| `H` | 上一个 buffer |
-| `L` | 下一个 buffer |
+| `H` | 上一个 buffer（只在当前 tab 内循环） |
+| `L` | 下一个 buffer（只在当前 tab 内循环） |
 | `q` | 关闭当前 buffer（智能关闭） |
 
 ### 文件查找 (Telescope)

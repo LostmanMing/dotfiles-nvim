@@ -50,6 +50,30 @@
 
 注意 `hidden = true` / `--hidden` 只放开隐藏文件，**不影响** gitignore 过滤，别混淆。另外 `oldfiles`（`<leader>fr`）和 `buffers`（`<leader>fb`）取的是 vim 自己的列表、根本不经过 rg，永远不受 `.gitignore` 约束。
 
+### buffer 按 tab 隔离（scope.nvim）
+
+`lua/plugins/scope.lua`。机制是 **TabLeave 时把当前 tab 的 buffer 全部置为
+`buflisted=false` 并缓存，TabEnter 时把进入的那个 tab 的恢复成 `true`**。因为动的是
+`buflisted` 本身，bufferline、`H`/`L`、`:ls`、`:bnext`，以及 `q` 的关闭逻辑（它数
+`buflisted`）全都自动变成 tab 作用域，不需要各处分别打补丁。
+
+不要改成 bufferline 的 `custom_filter` 手写一套：那样只有 bufferline 是隔离的、
+`:ls`/telescope/`q` 仍是全局，反而割裂。bufferline README 的
+「How do I see only buffers per tab?」也是指向这个插件。
+
+两条改 `q` 时容易踩的：
+
+1. **`nvim_buf_delete` 是全局的。** 同一文件在两个 tab 都开着时直接删，会让它从另一个
+   tab 的 bufferline 里一起消失（实测过）。所以 `keymaps.lua` 里先用
+   `open_in_other_tab()` 查 `scope.core.cache`，命中就只设 `buflisted = false`。
+2. **`tabclose` 必须排在删 buffer 之后。** 排前面会导致「有 2+ 个 tab」时 `q` 完全关不掉
+   buffer（一直堆积），而且在分屏那个 tab 里收到最后一个窗口再按 `q` 会把正在用的 tab
+   关掉、人被丢到另一个 tab。
+
+关掉一个 tab 后，只属于它的 buffer 会变成「活着但哪儿都不列出」，连 `<leader>fB` 都搜
+不到（文件在磁盘上，重开即可）。`restore_state` 保持默认 `false`——上游自己标注 session
+恢复是实验性的。
+
 ### 剪贴板
 
 配置在 `lua/config/options.lua`，与 tmux 侧配合成三方互通（本地机器 ↔ 远程 tmux ↔ 远程 nvim）：

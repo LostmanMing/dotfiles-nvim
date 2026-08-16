@@ -12,6 +12,7 @@ return {
                 { "<leader>c", group = "code" },
                 { "<leader>m", group = "markdown" },
                 { "<leader>N", group = "notifications" },
+                { "<leader><Tab>", group = "tab" },
             },
         },
     },

@@ -18,7 +18,7 @@ return {
                 lualine_b = {
                     -- 不显式设 icon：lualine 默认的分支图标 U+E0A0 是 Nerd Font 标准字形，
                     -- 覆盖成别的私有区码点在部分字体里没有对应字形，会显示成空白
-                    { "branch", color = { fg = "#9888d1", bold = true } },  -- 初号机紫
+                    { "branch", color = { fg = "#67a659", bold = true } },  -- 初号机装甲绿（与 starship 分支色一致）
                     -- diff 数据由 gitsigns 提供（lualine 自动读取）
                     { "diff", symbols = { added = " ", modified = " ", removed = " " } },
                 },
