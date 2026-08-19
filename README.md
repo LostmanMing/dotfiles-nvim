@@ -198,10 +198,10 @@ nvim/
 
 | Key | Action |
 |-----|--------|
-| `gd` | 跳转到定义 |
-| `grd` | 跳转到声明 |
-| `grt` | 跳转到类型定义 |
-| `gri` | 跳转到实现 |
+| `gd` | 跳转到定义 (Telescope，单处直跳) |
+| `grd` | 跳转到声明 (原生，无 Telescope picker) |
+| `grt` | 跳转到类型定义 (Telescope) |
+| `gri` | 跳转到实现 (Telescope) |
 | `grr` | 查找引用 (Telescope) |
 | `grn` | 重命名符号 |
 | `gra` | 代码操作 (code action) |

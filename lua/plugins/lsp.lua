@@ -55,10 +55,12 @@ return {
             })
 
             -- ─── LSP 按键（gr 系列对齐 archibate）───
-            vim.keymap.set("n", "gd",  vim.lsp.buf.definition, { desc = "跳转到定义" })
+            -- 跳转类统一走 Telescope（多处结果带预览列表，单处直接跳），与 grr 引用界面一致。
+            -- grd 声明保持原生：Telescope 没有 lsp_declarations picker，且声明几乎只有一处。
+            vim.keymap.set("n", "gd",  "<cmd>Telescope lsp_definitions<CR>", { desc = "跳转到定义" })
             vim.keymap.set("n", "grd", vim.lsp.buf.declaration, { desc = "跳转到声明" })
-            vim.keymap.set("n", "grt", vim.lsp.buf.type_definition, { desc = "跳转到类型定义" })
-            vim.keymap.set("n", "gri", vim.lsp.buf.implementation, { desc = "跳转到实现" })
+            vim.keymap.set("n", "grt", "<cmd>Telescope lsp_type_definitions<CR>", { desc = "跳转到类型定义" })
+            vim.keymap.set("n", "gri", "<cmd>Telescope lsp_implementations<CR>", { desc = "跳转到实现" })
             vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<CR>", { desc = "查找引用" })
             vim.keymap.set("n", "grn", vim.lsp.buf.rename, { desc = "重命名符号" })
             vim.keymap.set("n", "gra", vim.lsp.buf.code_action, { desc = "代码操作" })
