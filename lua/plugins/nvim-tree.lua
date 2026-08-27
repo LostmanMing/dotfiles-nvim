@@ -24,11 +24,6 @@ return {
                 update_focused_file = {
                     enable = true,
                 },
-                actions = {
-                    open_file = {
-                        resize_window = false,
-                    },
-                },
                 filters = {
                     -- 不隐藏 .gitignore 排除的文件（默认 true=隐藏）。
                     -- 运行时按 I 可临时切换回隐藏
