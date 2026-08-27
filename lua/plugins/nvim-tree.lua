@@ -33,6 +33,11 @@ return {
                     enable = true,
                     timeout = 2000,           -- git 操作超时（ms）
                 },
+                actions = {
+                    open_file = {
+                        resize_window = false,
+                    },
+                },
                 renderer = {
                     icons = {
                         show = { git = true },
