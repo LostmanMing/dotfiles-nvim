@@ -19,9 +19,15 @@ return {
             require("nvim-tree").setup({
                 view = {
                     width = 30,
+                    preserve_window_proportions = true,
                 },
                 update_focused_file = {
                     enable = true,
+                },
+                actions = {
+                    open_file = {
+                        resize_window = false,
+                    },
                 },
                 filters = {
                     -- 不隐藏 .gitignore 排除的文件（默认 true=隐藏）。
