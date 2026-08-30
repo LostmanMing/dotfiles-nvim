@@ -232,11 +232,13 @@ vim.keymap.set("i", "jj", "<Esc>", { desc = "退出插入模式" })
 -- ==========================================
 -- Tab（标签页）：想开新文件又不想拆掉当前分屏布局时用
 -- 挂在 <leader><Tab> 而不是 <leader>t——后者已经是 terminal 组。
--- 切换用原生 gt / gT，开文件到新 tab 用 <leader>ff 再按 <C-t>（telescope 自带
--- select_tab），都已经能用，不再重复绑。关 tab 用 <leader><Tab>d——不走 q，
+-- 切换可用原生 gt / gT，也可用 <leader><Tab>h/l；开文件到新 tab 用 <leader>ff
+-- 再按 <C-t>（telescope 自带 select_tab）。关 tab 用 <leader><Tab>d——不走 q，
 -- 因为 q 是关 buffer 的键，让它同时管 tab 会互相打架（见上面 tabclose 那段注释）。
 -- ==========================================
 vim.keymap.set("n", "<leader><Tab>n", "<cmd>tabnew<CR>", { desc = "新建 tab" })
+vim.keymap.set("n", "<leader><Tab>h", "<cmd>tabprevious<CR>", { desc = "上一个 tab" })
+vim.keymap.set("n", "<leader><Tab>l", "<cmd>tabnext<CR>", { desc = "下一个 tab" })
 vim.keymap.set("n", "<leader><Tab>d", function()
     if vim.fn.tabpagenr("$") == 1 then
         vim.notify("只剩一个 tab，不能关", vim.log.levels.WARN, { title = "Tab" })

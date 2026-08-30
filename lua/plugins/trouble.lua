@@ -5,6 +5,10 @@ return {
         keys = {
             { "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", desc = "诊断面板" },
         },
-        opts = {},
+        opts = {
+            win = {
+                wo = { winfixbuf = true },
+            },
+        },
     },
 }

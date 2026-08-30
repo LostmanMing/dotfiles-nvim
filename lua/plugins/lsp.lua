@@ -55,9 +55,41 @@ return {
             })
 
             -- ─── LSP 按键（gr 系列对齐 archibate）───
-            -- 跳转类统一走 Telescope（多处结果带预览列表，单处直接跳），与 grr 引用界面一致。
+            -- gd 保持原来的 Telescope 定义跳转；gD 按当前窗口形状智能分屏查看定义。
+            -- 其它多结果跳转仍走 Telescope（带预览列表），与 grr 引用界面一致。
             -- grd 声明保持原生：Telescope 没有 lsp_declarations picker，且声明几乎只有一处。
-            vim.keymap.set("n", "gd",  "<cmd>Telescope lsp_definitions<CR>", { desc = "跳转到定义" })
+            local function goto_definition(open_cmd)
+                local params = vim.lsp.util.make_position_params(0, nil)
+                vim.lsp.buf_request_all(0, "textDocument/definition", params, function(results)
+                    local location, offset_encoding
+                    for client_id, response in pairs(results) do
+                        local result = response.result
+                        if result and not vim.tbl_isempty(result) then
+                            local client = vim.lsp.get_client_by_id(client_id)
+                            local locations = vim.islist(result) and result or { result }
+                            location = locations[1]
+                            offset_encoding = client and client.offset_encoding or "utf-16"
+                            break
+                        end
+                    end
+                    if not location then
+                        vim.notify("未找到定义", vim.log.levels.INFO, { title = "LSP" })
+                        return
+                    end
+                    if open_cmd then
+                        vim.cmd(open_cmd)
+                    end
+                    vim.lsp.util.show_document(location, offset_encoding, { focus = true, reuse_win = false })
+                end)
+            end
+
+            vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", { desc = "跳转到定义" })
+            vim.keymap.set("n", "gD", function()
+                local width = vim.api.nvim_win_get_width(0)
+                local height = vim.api.nvim_win_get_height(0)
+                local open_cmd = width >= height * 2 and "rightbelow vsplit" or "rightbelow split"
+                goto_definition(open_cmd)
+            end, { desc = "智能分屏查看定义" })
             vim.keymap.set("n", "grd", vim.lsp.buf.declaration, { desc = "跳转到声明" })
             vim.keymap.set("n", "grt", "<cmd>Telescope lsp_type_definitions<CR>", { desc = "跳转到类型定义" })
             vim.keymap.set("n", "gri", "<cmd>Telescope lsp_implementations<CR>", { desc = "跳转到实现" })

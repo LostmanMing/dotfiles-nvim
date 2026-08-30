@@ -245,4 +245,18 @@ vim.api.nvim_create_autocmd("FileChangedShell", {
     end,
 })
 
+-- 工具窗口固定显示自己的 buffer，避免 :edit、LSP 跳转等把侧栏内容替换掉
+vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = vim.api.nvim_create_augroup("FixedToolBuffers", { clear = true }),
+    pattern = "*",
+    callback = function()
+        local fixed_filetypes = {
+            NvimTree = true,
+            OverseerList = true,
+        }
+        if fixed_filetypes[vim.bo.filetype] then
+            vim.opt_local.winfixbuf = true
+        end
+    end,
+})
 

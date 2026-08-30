@@ -127,6 +127,9 @@ return {
                 -- 注：原来 nvim-notify 的 stages="fade" 没有对应项，snacks 通知无动画
                 -- style 默认已是 compact，与原配置一致
             },
+            picker = {
+                ui_select = true,
+            },
             -- 光标停住时用 LSP documentHighlight 高亮同一符号的所有出现位置，
             -- 改名前先扫一眼影响范围很方便。跳转键位在下面 config 里注册（模块本身不建键位）
             words = {

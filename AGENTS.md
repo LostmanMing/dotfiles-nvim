@@ -6,6 +6,8 @@
 
 **规则**: 新增任何配置（插件、快捷键、选项）必须在对应文件中写注释说明用途。每个 keymap 必须带 `desc`。
 
+**开发 Skill**: 修改本仓库时使用 `/develop-neovim`；它负责安装、修改、排错和真实交互验收，并复用下方已有的 `verify-nvim-config`。
+
 **验证（强制）**: 任何修改 nvim 配置的改动，提交前必须实际运行 nvim 验证，禁止未运行就声称"已生效/已修复"。最快方式：运行 `skills/verify-nvim-config/verify.sh`（语法校验 + 启动烟测）；涉及键位 / UI / 终端 / 命令的改动，再按 `skills/verify-nvim-config/SKILL.md` 用 tmux 真实会话验证。
 
 ## Requirements
@@ -20,6 +22,8 @@
 | ripgrep | Telescope **必需** | `live_grep`/`grep_string` 只用 rg；`find_files` 的命令选择也是 rg 优先（`__files.lua` 里 `rg → fd → fdfind → find`）。没装会降级到 `find`，那就完全不认 `.gitignore` |
 | fd | 仅 rg 不可用时的降级备选 | **rg 在的话一次都不会被调用**，别当成提速手段。Debian/Ubuntu 包名是 `fd-find`、二进制却叫 `fdfind`，而 telescope 先查 `fd` 再查 `fdfind`，所以只会命中后一个分支 |
 | clangd | C/C++ LSP | mason 自动装插件，但 clangd 二进制需系统提供 |
+| debugpy | Python DAP adapter | `nvim-dap-python` 使用系统 `python3` 中的模块；安装命令见下 |
+| lldb-vscode | C/C++ DAP adapter | Ubuntu 22.04 由 `lldb-14` 提供，二进制通常是 `lldb-vscode-14` |
 | tree-sitter-cli >= 0.26.1 | parser 编译器 | **用系统包管理器装，不要用 npm**（treesitter main 分支的明确要求） |
 | Nerd Font | 图标字体 | JetBrainsMono Nerd Font |
 
@@ -32,6 +36,19 @@
   或从 [tree-sitter releases](https://github.com/tree-sitter/tree-sitter/releases) 下二进制。
   Debian/Ubuntu 仓库里的 `tree-sitter` 通常远低于 0.26，别直接 apt。
 - **Neovim**: 下载 GitHub Release 二进制或 appimage
+
+### 调试依赖
+
+`lazy.nvim` 会自动安装 `nvim-dap` 和 `nvim-dap-python` 插件；调试 adapter 需单独安装：
+
+```bash
+python3 -m pip install --user debugpy
+apt-get install -y lldb-14
+python3 -m debugpy --version
+command -v lldb-vscode-14
+```
+
+Python 调试使用当前 `python3` 环境中的 debugpy；C/C++ 与 Python→C++ 混合调试使用 `lldb-vscode-14`。容器内 attach/launch 还需要 `CAP_SYS_PTRACE`，缺少该权限时 LLDB 会启动但无法控制目标进程。
 
 ### 搜索为什么会命中 `.gitignore` 排除的文件
 
