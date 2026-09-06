@@ -17,12 +17,13 @@ return {
                     if not vim.api.nvim_buf_is_valid(buf) or not vim.api.nvim_win_is_valid(win) then
                         return false
                     end
-                    -- 浮窗（补全文档、telescope 预览等）不挂
+                    -- 浮窗没有稳定的普通文件上下文，不挂面包屑。
                     if vim.api.nvim_win_get_config(win).relative ~= "" then return false end
                     if vim.bo[buf].buftype ~= "" then return false end
                     local ft = vim.bo[buf].filetype
                     local skip = {
-                        NvimTree = true, toggleterm = true, trouble = true,
+                        ["neo-tree"] = true, ["neo-tree-preview"] = true,
+                        toggleterm = true, trouble = true,
                         snacks_dashboard = true, lazy = true, mason = true,
                         DiffviewFiles = true, DiffviewFileHistory = true,
                     }

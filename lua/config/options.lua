@@ -14,29 +14,13 @@ vim.opt.tabstop = 4                -- 默认回落 4 格（同上）
 -- 鼠标
 vim.opt.mouse = "a"                -- 所有模式下允许鼠标（点击定位、滚轮、拖动窗格）
 
--- 文件自动刷新
+-- 禁用终端响铃，避免窗口/面板已到边界时 Ctrl+hjkl 在部分终端触发整屏闪烁
+vim.opt.visualbell = false
+vim.opt.errorbells = false
+vim.opt.belloff = "all"
+
+-- 文件自动刷新；具体检查、冲突保护与保存行为由 config.autosave 配置
 vim.opt.autoread = true            -- 外部修改文件时自动重新读取
-
--- autoread 仅在 nvim 主动 checktime 时生效，加 autocmd 在常见时机触发检查
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
-    group = vim.api.nvim_create_augroup("AutoReload", { clear = true }),
-    pattern = "*",
-    callback = function()
-        if vim.fn.mode() ~= "c" and vim.bo.buftype == "" and vim.api.nvim_buf_get_name(0) ~= "" then
-            vim.cmd("checktime")
-        end
-    end,
-})
-
--- 磁盘文件被外部修改并重载后，给用户一行提示
-local grp_filechanged = vim.api.nvim_create_augroup("FileChanged", { clear = true })
-vim.api.nvim_create_autocmd("FileChangedShellPost", {
-    group = grp_filechanged,
-    pattern = "*",
-    callback = function(args)
-        vim.notify(("磁盘文件已变更，buffer 已重载: %s"):format(vim.fn.fnamemodify(args.file, ":~:.")), vim.log.levels.WARN)
-    end,
-})
 
 -- 系统剪贴板：OSC 52 与本地剪贴板工具**并行**，谁通算谁的
 --
@@ -219,39 +203,13 @@ vim.opt.fixendofline = false       -- 保存时不自动在文件末尾补换行
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
 
--- 自动保存：尽可能缩小"已改未存"窗口，让外部 reload 安全
-local function autosave()
-    if vim.bo.modified and require("config.util").is_writable_file_buf() then
-        pcall(vim.cmd, "silent! lockmarks write")
-    end
-end
-
-vim.api.nvim_create_autocmd(
-    { "BufLeave", "FocusLost", "InsertLeave", "TextChanged" },
-    {
-        group = vim.api.nvim_create_augroup("AutoSave", { clear = true }),
-        pattern = "*",
-        callback = autosave,
-    }
-)
-
--- 外部改文件时：未修改的自动 reload；已有未保存改动的弹提示，避免静默覆盖
--- 注意：触发时当前 buffer 不一定是变更的那个，必须用 args.buf 判断
-vim.api.nvim_create_autocmd("FileChangedShell", {
-    group = grp_filechanged,
-    pattern = "*",
-    callback = function(args)
-        vim.v.fcs_choice = vim.bo[args.buf].modified and "ask" or "reload"
-    end,
-})
-
 -- 工具窗口固定显示自己的 buffer，避免 :edit、LSP 跳转等把侧栏内容替换掉
 vim.api.nvim_create_autocmd("BufWinEnter", {
     group = vim.api.nvim_create_augroup("FixedToolBuffers", { clear = true }),
     pattern = "*",
     callback = function()
         local fixed_filetypes = {
-            NvimTree = true,
+            ["neo-tree"] = true,
             OverseerList = true,
         }
         if fixed_filetypes[vim.bo.filetype] then

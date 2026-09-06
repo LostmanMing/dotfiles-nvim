@@ -1,5 +1,5 @@
 -- snacks.nvim：收编几个原本各自一个插件的小功能
--- 启用 dashboard（启动页）、indent（缩进线）、notifier（通知）、bigfile（大文件降级）
+-- 启用 dashboard（启动页）、input（统一输入框）、indent（缩进线）、notifier（通知）、bigfile（大文件降级）
 -- 未启用 scroll（平滑滚动）：与 smear-cursor 的光标拖影抢同一手势，已选后者
 -- snacks 所有模块默认全关，opts 里出现哪个 key 才启用哪个，所以没列的模块一行代码都不跑
 
@@ -11,7 +11,7 @@ local ART_W, ART_H = 64, 22      -- 与 eva01-splash.ans 的实际宽高一致
 local function art_section(self)
     local size = self:size()
     -- 放不下就不显示：terminal 段是固定宽高的悬浮窗，超出窗口会折行错乱
-    -- （例如开 nvim-tree 后 dashboard 变窄）。留 2 列/1 行余量避免贴边。
+    -- （例如开 Neo-tree 后 dashboard 变窄）。留 2 列/1 行余量避免贴边。
     if ART_W + 2 > size.width or ART_H + 1 > size.height then
         return nil
     end
@@ -25,7 +25,7 @@ local function art_section(self)
         width = ART_W,
         height = ART_H,
         -- ttl=0 禁用输出缓存：缓存重播走的终端宽度不等于本段宽度，
-        -- 重新渲染（如开 nvim-tree）时会把长行折断。每次直接跑 cat 才对齐。
+        -- 重新渲染（如开 Neo-tree）时会把长行折断。每次直接跑 cat 才对齐。
         ttl = 0,
     }
 end
@@ -130,6 +130,13 @@ return {
             picker = {
                 ui_select = true,
             },
+            input = {
+                win = {
+                    keys = {
+                        i_esc = { "<esc>", "cancel", mode = "i" },
+                    },
+                },
+            }, -- 接管 vim.ui.input；Esc 直接取消，供 Neo-tree 等统一显示输入框
             -- 光标停住时用 LSP documentHighlight 高亮同一符号的所有出现位置，
             -- 改名前先扫一眼影响范围很方便。跳转键位在下面 config 里注册（模块本身不建键位）
             words = {
@@ -151,6 +158,33 @@ return {
         },
         config = function(_, opts)
             require("snacks").setup(opts)
+
+            local adapter_installed = false
+            local function install_neotree_input_adapter()
+                if adapter_installed or vim.ui.input ~= Snacks.input.input then return end
+
+                local snacks_input = vim.ui.input
+                local prefix = "Neo-tree Popup\n"
+                vim.ui.input = function(input_opts, on_confirm)
+                    if type(input_opts) == "table" and type(input_opts.prompt) == "string"
+                        and vim.startswith(input_opts.prompt, prefix) then
+                        input_opts = vim.tbl_extend("force", {}, input_opts)
+                        input_opts.prompt = input_opts.prompt:sub(#prefix + 1)
+                    end
+                    return snacks_input(input_opts, on_confirm)
+                end
+                adapter_installed = true
+            end
+
+            if vim.v.vim_did_enter == 1 then
+                install_neotree_input_adapter()
+            else
+                vim.api.nvim_create_autocmd("UIEnter", {
+                    once = true,
+                    callback = function() vim.schedule(install_neotree_input_adapter) end,
+                })
+            end
+
             -- 用 Snacks.util.set_hl 而非 nvim_set_hl：它托管高亮组，换 colorscheme 后自动重挂
             local hl = {
                 EvaYellow = { fg = EVA.yellow },

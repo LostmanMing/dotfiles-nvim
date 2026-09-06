@@ -47,8 +47,8 @@ return {
                 lualine_z = { { "location", icon = "" } },
             },
             -- 特殊窗口换成各自专用的精简状态栏：不加时它们会套用上面这套通用配置，
-            -- 显示无意义的相对路径和行列号（如 nvim-tree 里显示 "NvimTree_1 1:1"）
-            extensions = { "nvim-tree", "toggleterm", "trouble", "lazy", "mason", "quickfix", "man" },
+            -- 显示无意义的相对路径和行列号（如 Neo-tree 里显示内部 buffer 名和 1:1）
+            extensions = { "neo-tree", "toggleterm", "trouble", "lazy", "mason", "quickfix", "man" },
         },
     },
 }

@@ -34,7 +34,10 @@ return {
     {
         "mason-org/mason-lspconfig.nvim",
         lazy = false,
-        dependencies = { "mason-org/mason.nvim" },
+        dependencies = {
+            "mason-org/mason.nvim",
+            "Crysthamus/nvim-file-operations",
+        },
         config = function()
             local servers = {
                 "lua_ls",
@@ -110,14 +113,9 @@ return {
             -- 作用域，但多了通知和 which-key 图标），键位仍是 <leader>ci
 
             -- ─── on_attach / capabilities ───
-            -- 判断是否真实磁盘文件 buffer：clangd 只支持 file URI，
-            -- diffview://、gitsigns:// 等虚拟 buffer 会在 inlayHint 等请求上报 -32602 错误
+            -- clangd 只支持真实磁盘文件；共享判断也排除 URI、目录和特殊 buffer。
             local function is_real_file(bufnr)
-                if vim.bo[bufnr].buftype ~= "" then return false end
-                local name = vim.api.nvim_buf_get_name(bufnr)
-                if name == "" then return false end
-                if name:find("://") then return false end
-                return true
+                return require("config.util").is_file_buf(bufnr)
             end
 
             -- 参数签名自动触发用的共享 augroup（buffer-local 注册，见 on_attach）
@@ -161,6 +159,11 @@ return {
             -- 补全 capabilities 不用手动传：blink.cmp 在 0.11+ 会自己调
             -- vim.lsp.config('*', { capabilities = ... })，而 vim.lsp.config 会把 '*'
             -- 的配置合并进每个具体 server，所以下面只需要给 on_attach。
+            -- 文件操作 capability 必须在 vim.lsp.enable() 前宣告，Neo-tree 重命名/移动时
+            -- 才能让支持 workspace.fileOperations 的 LSP 返回 import/path 更新。
+            vim.lsp.config("*", {
+                capabilities = require("nvim-file-operations.config").default_capabilities(),
+            })
 
             -- clangd 自定义 cmd：在通用循环 enable 之前设置，循环会合并 on_attach
             vim.lsp.config("clangd", {

@@ -22,7 +22,7 @@ return {
                 },
             },
             presets = {
-                bottom_search = true,           -- / 搜索仍用底部（跨页搜索更顺手）
+                bottom_search = false,          -- /、? 搜索继承 cmdline_popup，不再占左下角
                 command_palette = true,         -- : 命令行与补全菜单贴在一起
                 long_message_to_split = true,   -- 超长消息用 split 显示
                 lsp_doc_border = true,          -- 悬浮文档带边框

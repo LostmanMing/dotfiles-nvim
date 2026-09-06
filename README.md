@@ -56,6 +56,7 @@ nvim/
 ├── lua/
 │   ├── config/
 │   │   ├── options.lua
+│   │   ├── autosave.lua
 │   │   ├── keymaps.lua
 │   │   ├── lazy-setup.lua
 │   │   └── util.lua
@@ -71,7 +72,7 @@ nvim/
 │       ├── lualine.lua
 │       ├── markdown.lua
 │       ├── noice.lua
-│       ├── nvim-tree.lua
+│       ├── neo-tree.lua
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
 │       ├── sleuth.lua
@@ -99,7 +100,8 @@ nvim/
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | 底部状态栏 | - |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` 后弹出快捷键提示 | `<leader>` |
 | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | 顶部 buffer 标签栏 | - |
-| [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua) | 侧边文件树 | `Ctrl+n` |
+| [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim) | 侧边文件树、预览与 Git 状态 | `Ctrl+n` |
+| [nvim-file-operations](https://github.com/Crysthamus/nvim-file-operations) | Neo-tree 移动/重命名时通知支持该协议的 LSP 更新引用 | - |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 模糊搜索（文件/文本/buffer/符号） | `<leader>f*` |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
 | [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context) | 把当前函数/循环的签名行钉在窗口顶部 | `<leader>cc`, `[C` |
@@ -134,6 +136,25 @@ nvim/
 | `jj` | 退出插入模式 |
 | `q` | 智能关闭（浮窗 → split → tab → buffer → 全部退出） |
 | `<Esc>` | 清除搜索高亮 |
+
+### 自动保存与外部修改
+
+普通磁盘文件会在修改后离开 buffer、失去焦点、退出插入模式或触发 `TextChanged` 时自动保存。未命名、URI、目录、只读、终端、Neo-tree、Diffview 等特殊 buffer 不会自动写盘；保存失败会显示通知且同一份未变更内容只提示一次。
+
+保存前会检查磁盘版本：本地未修改时自动 reload；本地与磁盘同时变更时保留现有确认流程并暂停自动保存，直到你用 `:edit!` reload 或主动 `:write` 解决冲突。
+
+保存模块在 `lua/config/autosave.lua`，启动配置在 `init.lua`：
+
+```lua
+require("config.autosave").setup({
+  save = {
+    workspace_edits = true,
+    background_modified_buffers = true,
+  },
+})
+```
+
+可配置保存事件、checktime 事件、WorkspaceEdit 保存、后台程序化修改保存和通知。成功的 AI/LSP WorkspaceEdit 会逐个安全保存实际修改的普通文件；失败或部分失败的 WorkspaceEdit 不会自动落盘，保留 buffer 供检查/undo。不会使用 `:wall` 或强制写入。
 
 ### 窗口
 
@@ -177,8 +198,8 @@ nvim/
 
 | Key | Action |
 |-----|--------|
-| `H` | 上一个 buffer（只在当前 tab 内循环） |
-| `L` | 下一个 buffer（只在当前 tab 内循环） |
+| `H` | 上一个文件 buffer（只在当前 tab 内循环，跳过目录/工具 buffer） |
+| `L` | 下一个文件 buffer（只在当前 tab 内循环，跳过目录/工具 buffer） |
 | `q` | 关闭当前 buffer（智能关闭） |
 
 ### 文件查找 (Telescope)
@@ -299,20 +320,30 @@ nvim/
 | `gf` / `gF` | 在编辑窗口打开光标下的文件 |
 | `<Esc>` | 退出到 normal 模式 |
 
-### 文件树 (nvim-tree)
+### 文件树 (Neo-tree)
 
 | Key | Action |
 |-----|--------|
-| `<C-n>` | 切换目录树 |
-| `l` (树上) | 预览文件 |
-| `Enter` (树上) | 打开文件 |
-| `q` (树上) | 聚焦到编辑窗口 |
-| `a` (树上) | 新建文件/目录 |
+| `<C-n>` | 未打开时打开；已打开时聚焦；焦点在树上时关闭；Git 变动视图中则返回文件树 |
+| `g` (树上) | 在完整文件树与当前仓库 Git 变动文件树之间切换 |
+| `l` (文件树 / Git 变动树上) | 目录展开/折叠；文件一次性非浮动预览，`j/k` 不更新预览；顶部显示面包屑 |
+| `Enter` (树上) | 正式打开当前选中项并聚焦编辑窗口 |
+| `q` (树上) | 取消预览后聚焦到右侧编辑窗口并恢复原标题 |
+| `a` (树上) | 新建文件；名称以 `/` 结尾时新建目录 |
 | `r` (树上) | 重命名 |
 | `d` (树上) | 删除 |
-| `I` (树上) | 切换是否隐藏 `.gitignore` 排除的文件 |
+| `R` (树上) | 刷新目录树并显示耗时 |
+| `I` (树上) | 隐藏/恢复 `.gitignore` 排除的文件 |
 
-默认**显示** `.gitignore` 排除的文件（带 `◌` 标记区分），按 `I` 可临时隐藏。
+默认**显示** `.gitignore` 排除的文件，并按 Git 状态给文件名着色；按 `I` 只切换 ignored 文件。目录树初始宽度为 30，手动调整后聚焦、预览和打开文件不会重置宽度。
+
+树上按 `g` 显示当前仓库已修改、暂存、未跟踪和删除的路径；再按 `g` 或按 `<C-n>` 回到完整文件树，保留原先的展开状态。
+
+`nvim <目录>` 会由 Neo-tree 在启动时直接接管，不进入 Netrw。右侧先保留一个不进入 Bufferline 的空白内容区；preview 或打开文件后才显示该文件名。
+
+`a`、`r` 等文件操作通过统一的 Snacks Input 输入框完成；无论 `cmdheight` 是否为 0，创建/重命名提示都会完整显示。文件名以 `/` 结尾时创建目录，Esc 或 `q` 取消且不会写入任何内容。
+
+Neo-tree 的单文件移动/重命名会通知支持 `workspace.fileOperations` 的 LSP；例如 LuaLS 会询问是否更新 `require` 路径。目录重命名和其它语言的引用更新取决于对应 server，不能保证。若 LSP 已先应用 workspace edit 而文件系统操作随后失败，需要用 undo 或 VCS 手动恢复。
 
 ### 启动页 (Dashboard)
 

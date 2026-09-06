@@ -71,10 +71,10 @@ Python 调试使用当前 `python3` 环境中的 debugpy；C/C++ 与 Python→C+
 
 `lua/plugins/scope.lua`。机制是 **TabLeave 时把当前 tab 的 buffer 全部置为
 `buflisted=false` 并缓存，TabEnter 时把进入的那个 tab 的恢复成 `true`**。因为动的是
-`buflisted` 本身，bufferline、`H`/`L`、`:ls`、`:bnext`，以及 `q` 的关闭逻辑（它数
-`buflisted`）全都自动变成 tab 作用域，不需要各处分别打补丁。
+`buflisted` 本身，bufferline、`:ls`、`:bnext`，以及 `q` 的关闭逻辑（它数
+`buflisted`）全都自动变成 tab 作用域。`H`/`L` 读取同一份 BufferLine 顺序，但额外跳过目录和工具 buffer，避免切换到非文件内容。
 
-不要改成 bufferline 的 `custom_filter` 手写一套：那样只有 bufferline 是隔离的、
+不要改成 bufferline 的 `custom_filter` 手写 tab 隔离：那样只有 bufferline 是隔离的、
 `:ls`/telescope/`q` 仍是全局，反而割裂。bufferline README 的
 「How do I see only buffers per tab?」也是指向这个插件。
 
@@ -90,6 +90,22 @@ Python 调试使用当前 `python3` 环境中的 debugpy；C/C++ 与 Python→C+
 关掉一个 tab 后，只属于它的 buffer 会变成「活着但哪儿都不列出」，连 `<leader>fB` 都搜
 不到（文件在磁盘上，重开即可）。`restore_state` 保持默认 `false`——上游自己标注 session
 恢复是实验性的。
+
+### Neo-tree 文件树
+
+`lua/plugins/neo-tree.lua` 启用 filesystem 与 git_status source，必须 `lazy=false` 并显式 `hijack_netrw_behavior="open_default"`，让 `nvim <目录>` 在 Netrw 前打开左侧树；右侧空白内容占位是预期行为，但单目录启动时必须在 Neo-tree 窗口打开后设为 unlisted，避免出现文件夹或 `[No Name]` Bufferline tab。`<C-n>` 是三态：未打开时打开并 reveal，已打开但焦点在代码窗时只 focus 现有树窗口，焦点在树上时关闭；Git-status 视图中则切回 filesystem。两种 source 中的 `g` 均在两视图间切换，切换时只关闭当前 source，保留 filesystem 的展开状态和宽度；`g` mapping 必须 `nowait=false`，既保留 filesystem 的 `g?` help，也保留 Git-status 的 `ga`/`gu`/`gr` 操作前缀。filesystem 专用 mappings 必须放在 `filesystem.window.mappings`，不要覆盖 Git-status 的 stage/unstage/revert 命令。
+
+`l` 在目录上调用 filesystem `toggle_node` 展开/折叠，不触发 preview；在文件上才是一次性非浮动 preview：按下时只预览当前选中项，之后 `j/k` 不更新预览；焦点必须留在树。此 preview mapping 同时用于 Git-status source。`preview_once()` 的文件路径必须调用原生 `preview`，不能改回订阅 CursorMoved 的 `toggle_preview`。preview target 必须保存原 winbar，并挂 Dropbar 显示面包屑；q、Esc、Enter、`<C-n>` close 和 WinClosed 后恢复原值。树内 `q` 先 revert preview 再回 preview target；Enter 则正式打开**当前选中**项并聚焦编辑窗。ignored 文件默认可见，`I` 只切换 ignored，不要把 dotfile/hidden 过滤混进来。`R` 的开始/完成通知使用同一 ID。最后内容窗口关闭时仍由 `keymaps.lua` 保存并退出，不能启用 Neo-tree 的 `close_if_last_window` 取代它。
+
+Dashboard 不能直接成为非浮动 preview 的旧 buffer：Neo-tree 会把它的 `bufhidden=wipe` 改成 `hide`，导致 EVA terminal 浮窗残留且退出 preview 后 Dashboard 被恢复。`preview_once()` 必须先把 Dashboard 窗口交给一次性 unlisted buffer，再调用 Neo-tree 原生 preview；普通文件不能走这个特判。
+
+Neo-tree 设置 `use_popups_for_input=false` 后，`a/r` 等文本操作走 `vim.ui.input`，由 `snacks.lua` 的 `input = {}` 接管为全局 Snacks Input；插入态单次 Esc 直接取消，避免补全内容误提交。Snacks setup 后的 adapter 只剥离精确的 `Neo-tree Popup\n` cmdheight=0 兼容前缀，避免多行标题截断；其它全局输入必须原样转发。不要改写 `add`/`rename` 映射或用 Telescope 重做输入：当前链路保留 Neo-tree 的选中路径、`/` 建目录、嵌套/brace 创建、Tab 补全、取消、重复目标错误与刷新。
+
+`config.autosave` 是保存、reload、外部冲突和 LSP WorkspaceEdit 保存的唯一所有者；通过 `setup()` 的 `save.events`、`save.workspace_edits`、`save.background_modified_buffers`、`reload.checktime_events` 和 `notifications` 配置，不要在 options/plugins 中重复注册保存 autocmd。它只写普通磁盘文件，不 force write，成功 WorkspaceEdit 才逐个调度实际修改目标；失败/部分失败编辑必须保持 modified、不得自动落盘。后台程序化改动只保存非当前 buffer，当前用户编辑仍走常规事件。`q`/tab/quit 的显式 `silent write` 是保留的退出路径，暂不并入模块。
+
+`nvim-file-operations` 只监听 Neo-tree event 并通知支持 `workspace.fileOperations` 的 LSP；Neo-tree 始终是唯一文件操作入口，不调用该插件当前主线的直接 `rename/create/delete` API。它必须在 `vim.lsp.enable()` 前声明 global capability，且 `auto_save=false`，继续由 `config.autosave` 处理成功 workspace edit 的安全保存。LuaLS 单文件重命名会给出更新 `require` 的确认；目录/其它语言的 import 更新属于 server 能力，不能承诺。前置 workspace edit 与文件系统操作之间没有自动回滚，失败时用 undo 或 VCS 恢复。
+
+侧栏 filetype 是 `neo-tree`；非浮动 preview 会暂时把真实文件放进编辑窗并设置 `w:neo_tree_preview=1`，只有浮动 preview 才是 `neo-tree-preview`。侧栏参与智能 `q`/窗口计数排除和 `winfixbuf`；preview 保持 Dropbar 面包屑。真实预览文件仍是普通文件 buffer，不要为了 preview 破坏它的 autosave/LSP/H-L 语义。
 
 ### 剪贴板
 

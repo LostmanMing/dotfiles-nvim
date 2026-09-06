@@ -22,22 +22,40 @@ vim.keymap.set("n", "<S-Right>", "<cmd>vertical resize +2<CR>", { desc = "窗口
 -- ==========================================
 -- Buffer 切换
 -- ==========================================
--- 按 bufferline 可视顺序切换（bnext/bprev 按编号排序，可能与标签栏顺序不一致）
-vim.keymap.set("n", "H", "<cmd>BufferLineCyclePrev<CR>", { desc = "上一个 buffer" })
-vim.keymap.set("n", "L", "<cmd>BufferLineCycleNext<CR>", { desc = "下一个 buffer" })
+-- 按 bufferline 可视顺序切换，并跳过目录和工具 buffer
+local function cycle_file_buffer(direction)
+    local buffers = {}
+    for _, element in ipairs(require("bufferline").get_elements().elements) do
+        if type(element.id) == "number" and require("config.util").is_file_buf(element.id) then
+            table.insert(buffers, element.id)
+        end
+    end
+
+    local current = vim.api.nvim_get_current_buf()
+    local index
+    for i, buf in ipairs(buffers) do
+        if buf == current then
+            index = i
+            break
+        end
+    end
+    if not index or #buffers < 2 then return end
+
+    vim.api.nvim_set_current_buf(buffers[(index - 1 + direction) % #buffers + 1])
+end
+
+vim.keymap.set("n", "H", function() cycle_file_buffer(-1) end, { desc = "上一个文件 buffer" })
+vim.keymap.set("n", "L", function() cycle_file_buffer(1) end, { desc = "下一个文件 buffer" })
 
 -- ==========================================
 -- 智能关闭：q
 -- 顺序：浮窗 → split 窗 → file buffer → 全退
--- nvim-tree 上按 q 视为"切到代码窗"，永不通过 q 关闭
+-- Neo-tree 上按 q 视为"切到代码窗"，永不通过 q 关闭
 -- 所有 file buffer 关完后自动 qa（避免 tree 独占）
 -- ==========================================
 local function is_tree_buf(buf)
-    -- 插件没加载时 buffer 不可能是树；且避免 require 触发 lazy 提前加载 nvim-tree
-    if not package.loaded["nvim-tree"] then return false end
-    local ok, tree_api = pcall(require, "nvim-tree.api")
-    if not ok then return false end
-    return tree_api.tree.is_tree_buf(buf)
+    buf = buf == 0 and vim.api.nvim_get_current_buf() or buf
+    return vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == "neo-tree"
 end
 
 -- 全退前把所有可写且已修改的 buffer 写盘，避免 qa! 静默丢掉隐藏 buffer 的改动
@@ -55,8 +73,8 @@ end
 -- 背景：tabclose 之后，只属于这个 tab 的 buffer 会变成「活着但哪儿都不列出」的
 -- 僵尸——实测关掉 tab 后那个文件既不 buflisted、也不在 scope 的 cache 里，
 -- 连 <leader>fB 都搜不到（文件本身在磁盘上，重新 <leader>ff 打开即可，不算丢）。
--- options.lua 的全局 autosave（TextChanged/InsertLeave 等）实际已经覆盖了绝大多数
--- 情况，这里再写一遍纯粹是给"关掉就够不着了"这条不可逆路径兜底，
+-- config.autosave 的全局保存事件实际已经覆盖了绝大多数情况，这里再写一遍纯粹是给
+-- "关掉就够不着了"这条不可逆路径兜底，
 -- 和 save_all_and_quit 在 qa! 前兜一遍是同一个理由。
 -- 在 scope.nvim 下 buflisted 就等于「属于当前 tab」，所以直接扫 buflisted 即可。
 local function save_tab_and_close()
@@ -89,7 +107,7 @@ local function open_in_other_tab(buf)
 end
 
 vim.keymap.set("n", "q", function()
-    -- 光标在 nvim-tree 内 → focus 到右侧代码窗，不关 tree
+    -- 光标在 Neo-tree 内 → focus 到右侧代码窗，不关 tree
     if is_tree_buf(0) then
         vim.cmd("wincmd l")
         return
@@ -206,7 +224,7 @@ vim.keymap.set("n", "q", function()
     end
 end, { desc = "智能关闭：tree focus 切回代码 / 浮窗 / split / tab / buffer / 整体退出" })
 
--- 自动退出：当除了 nvim-tree（和浮窗）外没有任何窗口在显示内容时整体 qa
+-- 自动退出：当除了 Neo-tree（和浮窗）外没有任何窗口在显示内容时整体 qa
 -- 注：不能用 listed buffer 计数判断——预览压缩包等 unlisted buffer 时 listed 会是 0，
 -- 但归档窗口仍在，会被误判为“只剩 tree”而错误退出。改为按窗口判断。
 vim.api.nvim_create_autocmd("BufEnter", {
