@@ -273,6 +273,15 @@ return {
         },
         config = function(_, opts)
             require("neo-tree").setup(opts)
+            local function set_untracked_highlight()
+                vim.api.nvim_set_hl(0, "NeoTreeGitUntracked", { fg = "#81B88B" })
+            end
+            set_untracked_highlight()
+            vim.api.nvim_create_autocmd("ColorScheme", {
+                group = vim.api.nvim_create_augroup("NeoTreeGitUntrackedHighlight", { clear = true }),
+                callback = set_untracked_highlight,
+            })
+
             local group = vim.api.nvim_create_augroup("NeoTreePreviewWinbar", { clear = true })
             vim.api.nvim_create_autocmd("WinClosed", {
                 group = group,

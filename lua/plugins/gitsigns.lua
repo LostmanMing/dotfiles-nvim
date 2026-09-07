@@ -12,6 +12,13 @@ return {
                 changedelete = { text = "~" },
                 untracked    = { text = "▎" },
             },
+            signs_staged = {
+                add          = { text = "▎" },
+                change       = { text = "▎" },
+                delete       = { text = "_" },
+                topdelete    = { text = "‾" },
+                changedelete = { text = "~" },
+            },
             current_line_blame_opts = {
                 virt_text_pos = "eol",
                 delay = 300,
@@ -55,6 +62,26 @@ return {
         },
         config = function(_, opts)
             require("gitsigns").setup(opts)
+
+            local function set_git_highlights()
+                for _, name in ipairs({ "GitSignsAdd", "GitSignsUntracked" }) do
+                    vim.api.nvim_set_hl(0, name, { fg = "#81B88B" })
+                end
+                for _, name in ipairs({ "GitSignsStagedAdd", "GitSignsStagedUntracked" }) do
+                    vim.api.nvim_set_hl(0, name, { fg = "#6A9955" })
+                end
+                for _, name in ipairs({ "GitSignsStagedChange", "GitSignsStagedChangedelete" }) do
+                    vim.api.nvim_set_hl(0, name, { fg = "#8A6A28" })
+                end
+                for _, name in ipairs({ "GitSignsStagedDelete", "GitSignsStagedTopdelete" }) do
+                    vim.api.nvim_set_hl(0, name, { fg = "#632F32" })
+                end
+            end
+            set_git_highlights()
+            vim.api.nvim_create_autocmd("ColorScheme", {
+                group = vim.api.nvim_create_augroup("GitsignsGitHighlights", { clear = true }),
+                callback = set_git_highlights,
+            })
         end,
     },
 }

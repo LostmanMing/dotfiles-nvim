@@ -73,7 +73,7 @@ end
 -- 背景：tabclose 之后，只属于这个 tab 的 buffer 会变成「活着但哪儿都不列出」的
 -- 僵尸——实测关掉 tab 后那个文件既不 buflisted、也不在 scope 的 cache 里，
 -- 连 <leader>fB 都搜不到（文件本身在磁盘上，重新 <leader>ff 打开即可，不算丢）。
--- config.autosave 的全局保存事件实际已经覆盖了绝大多数情况，这里再写一遍纯粹是给
+-- options.lua 的 AutoSave 事件实际已经覆盖了绝大多数情况，这里再写一遍纯粹是给
 -- "关掉就够不着了"这条不可逆路径兜底，
 -- 和 save_all_and_quit 在 qa! 前兜一遍是同一个理由。
 -- 在 scope.nvim 下 buflisted 就等于「属于当前 tab」，所以直接扫 buflisted 即可。

@@ -139,22 +139,9 @@ nvim/
 
 ### 自动保存与外部修改
 
-普通磁盘文件会在修改后离开 buffer、失去焦点、退出插入模式或触发 `TextChanged` 时自动保存。未命名、URI、目录、只读、终端、Neo-tree、Diffview 等特殊 buffer 不会自动写盘；保存失败会显示通知且同一份未变更内容只提示一次。
+`lua/config/options.lua` 直接在离开 buffer、失去焦点、退出插入模式或触发 `TextChanged` 时执行普通文件保存。未命名、URI、目录、只读、终端、Neo-tree、Diffview 等特殊 buffer 不会自动写盘。
 
-自动保存以当前 Neovim buffer 为准直接写盘；外部程序（包括 AI）同时写入同一文件时会弹出非阻塞通知，当前编辑内容会在下次自动保存时覆盖磁盘版本，不会暂停、确认或留下持续的冲突状态。
-
-保存模块在 `lua/config/autosave.lua`，启动配置在 `init.lua`：
-
-```lua
-require("config.autosave").setup({
-  save = {
-    workspace_edits = true,
-    background_modified_buffers = true,
-  },
-})
-```
-
-可配置保存事件、checktime 事件、WorkspaceEdit 保存、后台程序化修改保存和通知。成功的 AI/LSP WorkspaceEdit 会逐个安全保存实际修改的普通文件；失败或部分失败的 WorkspaceEdit 不会自动落盘，保留 buffer 供检查/undo。不会使用 `:wall` 或强制写入。
+它也在 `FocusGained`、`BufEnter` 与 CursorHold 时检查外部修改：未修改 buffer 自动重载；本地已有未保存修改时使用 Neovim 原生确认流程选择保留或重载。
 
 ### 窗口
 
@@ -335,7 +322,7 @@ require("config.autosave").setup({
 | `R` (树上) | 刷新目录树并显示耗时 |
 | `I` (树上) | 隐藏/恢复 `.gitignore` 排除的文件 |
 
-默认**显示** `.gitignore` 排除的文件，并按 Git 状态给文件名着色；按 `I` 只切换 ignored 文件。目录树初始宽度为 30，手动调整后聚焦、预览和打开文件不会重置宽度。
+默认**显示** `.gitignore` 排除的文件，并按 Git 状态给文件名着色：未跟踪新增路径为绿色，ignored 路径为灰色；按 `I` 只切换 ignored 文件。目录树初始宽度为 30，手动调整后聚焦、预览和打开文件不会重置宽度。
 
 树上按 `g` 显示当前仓库已修改、暂存、未跟踪和删除的路径；再按 `g` 回到完整文件树，保留原先的展开状态。`<C-n>` 只聚焦或关闭当前侧栏，不切换视图。
 
