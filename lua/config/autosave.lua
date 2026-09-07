@@ -93,7 +93,7 @@ local function disk_has_changed(buf)
         or known.mtime.nsec ~= current.mtime.nsec
 end
 
-local function forget_disk_signature(buf)
+local function forget_buffer_state(buf)
     disk_signatures[buf] = nil
     disk_signature_known[buf] = nil
     failed_workspace_ticks[buf] = nil
@@ -139,21 +139,13 @@ function M.save(buf)
         return false
     end
     if not vim.bo[buf].modifiable then return false end
-    if autosave_state[buf] and autosave_state[buf].external_conflict then return false end
 
     if disk_has_changed(buf) then
-        get_autosave_state(buf).external_conflict = true
-        local checked, check_error = pcall(vim.cmd, "checktime " .. buf)
-        if not checked then
-            notify_once(buf, "checktime", ("外部变更检查失败: %s\n%s"):format(buffer_name(buf), error_message(check_error)), vim.log.levels.ERROR)
-        else
-            notify_once(buf, "external_change", ("自动保存已暂停：磁盘文件发生外部修改\n%s"):format(buffer_name(buf)))
-        end
-        return false
+        notify_once(buf, "external_write", ("检测到外部写入；已保留当前编辑内容\n%s"):format(buffer_name(buf)))
     end
 
     local written, write_error = pcall(vim.api.nvim_buf_call, buf, function()
-        vim.cmd("silent lockmarks write")
+        vim.cmd("silent lockmarks write!")
     end)
     if written then
         remember_disk_signature(buf)
@@ -200,7 +192,6 @@ end
 
 local function remember_workspace_buffer(tx, buf)
     if not vim.api.nvim_buf_is_valid(buf) or not file_util.is_file_buf(buf) then return end
-    if not disk_signature_known[buf] then remember_disk_signature(buf) end
     tx.buffers[buf] = true
 end
 
@@ -335,8 +326,8 @@ local function setup_autocmds()
         pattern = "*",
         callback = function(args)
             if file_util.is_file_buf(args.buf) and vim.bo[args.buf].modified then
-                get_autosave_state(args.buf).external_conflict = true
-                vim.v.fcs_choice = "ask"
+                vim.v.fcs_choice = ""
+                notify_once(args.buf, "external_write", ("检测到外部写入；下次自动保存将保留当前编辑内容\n%s"):format(buffer_name(args.buf)))
             else
                 vim.v.fcs_choice = "reload"
             end
@@ -367,7 +358,7 @@ local function setup_autocmds()
         pattern = "*",
         callback = function(args)
             reset_autosave_state(args.buf)
-            forget_disk_signature(args.buf)
+            forget_buffer_state(args.buf)
             attached_buffers[args.buf] = nil
         end,
     })

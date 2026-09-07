@@ -188,18 +188,11 @@ return {
                 "<C-n>",
                 function()
                     local tree_win, source = sidebar_tree_win()
-                    if source == "git_status" then
-                        require("neo-tree.command").execute({ action = "close", source = "git_status", position = "left" })
-                        open_filesystem_tree()
-                    elseif not tree_win then
+                    if not tree_win then
                         open_filesystem_tree()
                     elseif tree_win == vim.api.nvim_get_current_win() then
                         revert_filesystem_preview()
-                        require("neo-tree.command").execute({
-                            action = "close",
-                            source = "filesystem",
-                            position = "left",
-                        })
+                        require("neo-tree.command").execute({ action = "close", source = source, position = "left" })
                     else
                         vim.api.nvim_set_current_win(tree_win)
                     end
