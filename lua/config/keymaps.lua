@@ -290,3 +290,12 @@ vim.keymap.set("n", "gh", function()
         vim.lsp.buf.hover()
     end
 end, { desc = "显示文档/诊断信息" })
+
+-- ==========================================
+-- 诊断开关：<leader>cd
+-- ==========================================
+vim.keymap.set("n", "<leader>cd", function()
+    local enabled = vim.diagnostic.is_enabled()
+    vim.diagnostic.enable(not enabled)
+    vim.notify(enabled and "诊断已关闭" or "诊断已开启", vim.log.levels.INFO, { title = "Diagnostic" })
+end, { desc = "切换诊断显示" })

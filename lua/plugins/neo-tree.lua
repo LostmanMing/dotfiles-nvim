@@ -173,6 +173,35 @@ local function toggle_git_status()
     require("neo-tree.command").execute({ action = "focus", source = "git_status", position = "left" })
 end
 
+local function copy_selected_path(state)
+    local node = state.tree:get_node()
+    if not node or node.type == "message" then return end
+
+    require("neo-tree.sources.common.commands").copy_to_clipboard(state)
+    vim.fn.setreg("+", node.path or node:get_id(), "c")
+end
+
+local function refresh_source(state)
+    local source = state.name
+    local label = source == "git_status" and "Git 状态" or "目录树"
+    local id = "neo_tree_refresh_" .. source
+    local started = vim.uv.hrtime()
+    vim.notify(label .. "刷新中…", vim.log.levels.INFO, { title = "Neo-tree", id = id })
+    vim.cmd("redraw")
+
+    local ok, err = pcall(require("neo-tree.sources.manager").refresh, source, function()
+        vim.schedule(function()
+            local ms = (vim.uv.hrtime() - started) / 1e6
+            vim.notify(("%s已刷新（%.0f ms）"):format(label, ms), vim.log.levels.INFO,
+                { title = "Neo-tree", id = id })
+        end)
+    end)
+    if not ok then
+        vim.notify(("%s刷新失败: %s"):format(label, tostring(err)), vim.log.levels.ERROR,
+            { title = "Neo-tree", id = id })
+    end
+end
+
 return {
     {
         "nvim-neo-tree/neo-tree.nvim",
@@ -220,27 +249,11 @@ return {
                         ["a"] = "add",
                         ["r"] = "rename",
                         ["d"] = "delete",
+                        ["y"] = copy_selected_path,
                         ["I"] = "toggle_hidden",
                         ["g"] = { toggle_git_status, nowait = false },
                         ["g?"] = "show_help",
-                        ["R"] = function()
-                            local id = "neo_tree_refresh"
-                            local started = vim.uv.hrtime()
-                            vim.notify("目录树刷新中…", vim.log.levels.INFO, { title = "Neo-tree", id = id })
-                            vim.cmd("redraw")
-
-                            local ok, err = pcall(require("neo-tree.sources.manager").refresh, "filesystem", function()
-                                vim.schedule(function()
-                                    local ms = (vim.uv.hrtime() - started) / 1e6
-                                    vim.notify(("目录树已刷新（%.0f ms）"):format(ms), vim.log.levels.INFO,
-                                        { title = "Neo-tree", id = id })
-                                end)
-                            end)
-                            if not ok then
-                                vim.notify(("目录树刷新失败: %s"):format(tostring(err)), vim.log.levels.ERROR,
-                                    { title = "Neo-tree", id = id })
-                            end
-                        end,
+                        ["R"] = refresh_source,
                     },
                 },
                 hijack_netrw_behavior = "open_default",
@@ -263,10 +276,12 @@ return {
                 window = {
                     mappings = {
                         ["g"] = { toggle_git_status, nowait = false },
+                        ["y"] = copy_selected_path,
                         ["l"] = { preview_once, config = { use_float = false } },
                         ["<cr>"] = open_selected,
                         ["<esc>"] = cancel_preview,
                         ["q"] = quit_preview,
+                        ["R"] = refresh_source,
                     },
                 },
             },
