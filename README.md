@@ -17,8 +17,7 @@ Part of [LostmanMing/dotfiles](https://github.com/LostmanMing/dotfiles).
 ### macOS
 
 ```bash
-brew install ripgrep
-npm install -g tree-sitter-cli
+brew install ripgrep tree-sitter-cli
 brew install --cask font-jetbrains-mono-nerd-font
 ```
 
@@ -26,27 +25,30 @@ brew install --cask font-jetbrains-mono-nerd-font
 
 ```bash
 sudo apt install ripgrep fonts-jetbrains-mono
-npm install -g tree-sitter-cli
+# tree-sitter-cli 属于后续补齐项；需要立即编译 parser 时，按 AGENTS.md 选择 brew/pacman/cargo 或上游 release，别用旧 apt/npm 包。
 ```
 
 ## Standalone Installation
 
 ```bash
-git clone git@github.com:LostmanMing/dotfiles-nvim.git ~/.config/nvim
-nvim
+git clone https://github.com/LostmanMing/dotfiles-nvim.git ~/.config/nvim
+nvim --version | head -n1
 ```
 
-On first launch, lazy.nvim bootstraps itself and installs all plugins. LSP servers (pyright, clangd, lua_ls, etc.) are auto-installed via mason.
+First full launch may bootstrap lazy.nvim and install plugins. If the network is slow, get tmux and the config symlink in place first, then run `nvim` / `:Lazy sync` when you are ready.
 
-## As a dotfiles Submodule
+## As Part of the Root Dotfiles
+
+Use `/bootstrap-dotfiles` after cloning the root repository. It safely prefers a valid `~/dotfiles-nvim`, otherwise initializes only the pinned `.config/nvim` submodule over HTTPS, and refuses to overwrite an existing `~/.config/nvim`.
+
+Without a skill host, run:
 
 ```bash
-# Clone dotfiles with all submodules
-git clone --recurse-submodules git@github.com:LostmanMing/dotfiles.git ~/dotfiles
-
-# Create symlink
-ln -s ~/dotfiles/.config/nvim ~/.config/nvim
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --check
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --apply
 ```
+
+The bootstrap checks `nvim --version` but deliberately does not start this configuration; the first full launch may bootstrap lazy.nvim, plugins, and LSP tooling.
 
 ## Structure
 

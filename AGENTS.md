@@ -134,10 +134,16 @@ Neo-tree 设置 `use_popups_for_input=false` 后，`a/r` 等文本操作走 `vim
 
 ## Installation
 
+Standalone installation remains the HTTPS clone documented in `README.md`. When integrating with the root dotfiles repository, always route through `/bootstrap-dotfiles`; it validates and reuses `~/dotfiles-nvim` when possible, otherwise initializes only pinned `.config/nvim`, and refuses link collisions.
+
+Without a skill host:
+
 ```bash
-ln -sf ~/dotfiles/.config/nvim ~/.config/nvim
-nvim  # 首次启动自动安装插件和 LSP
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --check
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --apply
 ```
+
+Base activation only checks `nvim --version`. Do not launch configured Neovim during this phase because `lazy-setup.lua` may bootstrap plugins; plugin, LSP, tree-sitter, and DAP setup is follow-up work.
 
 ## LSP Servers
 
