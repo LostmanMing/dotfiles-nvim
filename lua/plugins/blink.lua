@@ -14,13 +14,31 @@ return {
         dependencies = { "rafamadriz/friendly-snippets" },
         opts = {
             keymap = {
-                -- preset=none：不用预设，完整保留原来 nvim-cmp 时期的三个键位语义
+                -- preset=none：不用预设，在默认语义上按使用习惯调整（见各键注释）
                 preset = "none",
                 -- 回车确认补全；没有选中任何项时 accept 不消费按键，落到 fallback 走原生换行
                 ["<CR>"] = { "accept", "fallback" },
-                -- Tab：菜单开着就往下选，否则尝试跳到 snippet 的下一个占位符，都不适用才是原生 Tab
-                ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
+                -- Tab：接受补全——菜单里没选择时直接接受第一项（select_and_accept），
+                -- C-j/C-k 选好后接受选中项；无菜单时先跳 snippet 占位符，再不行才是原生 Tab。
+                -- 这条链照抄 blink 官方 super-tab 预设；上下选交给 C-j/C-k，Tab 不再承担选择
+                ["<Tab>"] = {
+                    function(cmp)
+                        if cmp.snippet_active() then
+                            return cmp.accept()
+                        else
+                            return cmp.select_and_accept()
+                        end
+                    end,
+                    "snippet_forward",
+                    "fallback",
+                },
                 ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
+                -- C-j / C-k：菜单选择键（选择只动高亮不动正文，因为上面 selection 里
+                -- preselect/auto_insert 都已关）。
+                -- 无菜单时 fallback 放行原键：C-j 走原生换行、C-k 落到 lsp.lua 的签名提示；
+                -- 普通/终端模式的 C-j/C-k 面板导航（vim-tmux-navigator）不受这里的插入模式映射影响
+                ["<C-j>"] = { "select_next", "fallback" },
+                ["<C-k>"] = { "select_prev", "fallback" },
                 -- 上下键选择 + Ctrl-e 取消，保持和原生 pum 一致的直觉
                 ["<Up>"] = { "select_prev", "fallback" },
                 ["<Down>"] = { "select_next", "fallback" },

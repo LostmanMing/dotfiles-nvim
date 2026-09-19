@@ -120,7 +120,7 @@ nvim/
 | [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects) | 文本对象：函数/类/参数/循环的选择与跳转 | `vif/vaf`, `]f/[f`, `]p/[p` |
 | [dropbar.nvim](https://github.com/Bekaboo/dropbar.nvim) | 窗口顶部面包屑导航（路径 > 类 > 函数） | `<leader>cb` |
 | [mason.nvim](https://github.com/mason-org/mason.nvim) | LSP 服务器自动安装管理（clangd / lua_ls / pyright 等 8 个） | - |
-| [blink.cmp](https://github.com/saghen/blink.cmp) | 自动补全引擎（自带 LSP/路径/buffer/片段源，片段走内置 `vim.snippet`） | `Tab` / `S-Tab` / `CR` |
+| [blink.cmp](https://github.com/saghen/blink.cmp) | 自动补全引擎（自带 LSP/路径/buffer/片段源，片段走内置 `vim.snippet`） | `Tab` / `S-Tab` / `C-j` / `C-k` / `CR` |
 | [friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 通用代码片段集合（由 blink 读取） | - |
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | 添加/删除/替换包围字符 | `ys`, `ds`, `cs` |
 | [mini.pairs](https://github.com/echasnovski/mini.pairs) | 自动配对括号和引号 | - |
