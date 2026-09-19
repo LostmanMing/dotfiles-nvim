@@ -4,7 +4,7 @@
 
 **重要**: 先询问用户需要配置哪些部分，不要一次性全装。根据用户系统自动选择包管理器，本文件只列所需软件。
 
-**规则**: 新增任何配置（插件、快捷键、选项）必须在对应文件中写注释说明用途。每个 keymap 必须带 `desc`。颜色/风格统一走 `lua/config/theme.lua`（调色板 + 高亮组 + colorscheme），插件文件不写颜色字面量。
+**规则**: 新增任何配置（插件、快捷键、选项）必须在对应文件中写注释说明用途。每个 keymap 必须带 `desc`。颜色/风格统一走 `lua/config/theme.lua`（调色板 + 高亮组 + colorscheme + 多主题切换），插件文件不写颜色字面量。
 
 **开发 Skill**: 修改本仓库时使用 `/develop-neovim`；它负责安装、修改、排错和真实交互验收，并复用下方已有的 `verify-nvim-config`。
 
@@ -110,6 +110,10 @@ Neo-tree 设置 `use_popups_for_input=false` 后，`a/r` 等文本操作走 `vim
 ### Git 标记
 
 `lua/plugins/gitsigns.lua` 必须建立 staged/unstaged 层级：未暂存新增/未跟踪标记用 VS Code 亮绿 `#81B88B`；staged 新增用深绿 `#6A9955`、修改用深黄 `#8A6A28`、删除用深砖红 `#632F32`。色值与注册统一在 `lua/config/theme.lua` 的 `M.hl`（经 `Snacks.util.set_hl` 托管，换 colorscheme 自动重挂），改色不改这里。staged sign glyph 必须与 unstaged 相同（`▎` 等），因为两者共用 Snacks statuscolumn 的 Git 槽，不能让 `┃` 的居中视觉位置显得错列。上游默认给 staged sign 50% 前景色，在 OneDark 背景上会变成看不清的墨绿。
+
+### 主题（多主题切换）
+
+默认 OneDark；可选主题集在 `lua/plugins/themes.lua`（全部 `lazy=true`，靠 lazy 在 `ColorSchemePre` 按名加载）。`<leader>T` 的选择器是 `config/theme.lua` 的 `M.pick` 自搭的：**不要改回内置 `telescope.builtin.colorscheme`**——它自带的 Esc 还原实测会被关闭阶段的收尾回调覆盖（停在最后一个预览上），自搭版用 `set_selection` 补丁做预览、`closed` 标志挡收尾期杂散回调。持久化：ColorScheme 后写 `stdpath("state")/theme`（选择器 `_picking` 期间不写），VimEnter 后必须经 `vim.schedule` 还原——直接放在 VimEnter 上下文里 `:colorscheme` 会 E185（lazy 的按需加载在该上下文不生效，实测）。表面色派生：`bg_main←Normal.bg`、`bg_raised` 按其明暗提亮/加深一档；`grey_sep`/`grey_accent` 等是手工挑的固定中性色，不派生。
 
 ### 剪贴板
 

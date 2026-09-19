@@ -89,6 +89,7 @@ nvim/
 │       ├── snacks.lua
 │       ├── surround.lua
 │       ├── telescope.lua
+│       ├── themes.lua
 │       ├── tmux.lua
 │       ├── todo-comments.lua
 │       ├── toggleterm.lua
@@ -105,7 +106,8 @@ nvim/
 | Plugin | 功能 | 快捷键 |
 |--------|------|--------|
 | [lazy.nvim](https://github.com/folke/lazy.nvim) | 插件包管理器 | - |
-| [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim) | OneDark 配色主题 | - |
+| [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim) | OneDark 配色主题（默认） | `<leader>T` |
+| 主题集：tokyonight · catppuccin · kanagawa · gruvbox | 可选配色主题（lazy 加载；加主题在 `lua/plugins/themes.lua`） | `<leader>T` |
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | 底部状态栏 | - |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` 后弹出快捷键提示 | `<leader>` |
 | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | 顶部 buffer 标签栏 | - |
@@ -162,6 +164,14 @@ nvim/
 | `<leader>ut` | 打开 / 关闭撤销树侧栏（Neovim 0.12 内置包 `nvim.undotree`，首次按下才加载） |
 
 右侧 30 列竖窗，与代码窗并排，浏览时改动详情直接可见；树窗内光标移动即实时应用对应保存点；`⏎` 采纳并关闭；`q` / `Esc` 放弃浏览、恢复打开前的保存点；`<leader>ut` 再按一次为直接关闭（保留当前）。配合 `undofile`，关掉重开也能翻历史分支。
+
+### 主题
+
+| Key | Action |
+|-----|--------|
+| `<leader>T` | 切换主题（Telescope 选择器：移动即实时预览、`⏎` 采纳、`Esc` 还原） |
+
+默认 OneDark；可选主题集见 `lua/plugins/themes.lua`（tokyonight / catppuccin / kanagawa / gruvbox，lazy 加载，加主题就在那加一行）。选择会持久化（`stdpath("state")/theme`），重启自动还原。切换后自定义高亮（git 分档、bufferline、粘性上下文等）自动重注册，`bg_main` / `bg_raised` 两个表面色跟随当前主题重派生，`grey_sep` 等中性色固定。
 
 ### 窗口
 

@@ -118,3 +118,9 @@ end, { desc = "切换诊断显示" })
 -- ==========================================
 vim.keymap.set("n", "<leader>ut", function() require("config.undotree").toggle() end,
     { desc = "UndoTree" })
+
+-- ==========================================
+-- 主题切换：<leader>T（Telescope 实时预览；选择持久化，见 config/theme.lua）
+-- ==========================================
+vim.keymap.set("n", "<leader>T", function() require("config.theme").pick() end,
+    { desc = "主题切换（实时预览）" })

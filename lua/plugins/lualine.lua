@@ -7,7 +7,9 @@ return {
         dependencies = { "nvim-tree/nvim-web-devicons" },
         opts = {
             options = {
-                theme = theme.colorscheme.lualine,
+                -- 传函数引用：lualine 自带 ColorScheme 重跑 setup，换主题自动跟随
+                -- （默认主题 → 内置 onedark，其它 → auto 推导），逻辑在 config/theme.lua
+                theme = theme.lualine_theme,
                 globalstatus = true,                            -- 全局状态栏，与 laststatus=3 一致
                 -- 尖箭头段分隔（U+E0B0 / U+E0B2）；组件分隔留空更干净
                 -- 用字节转义写入，避免工具把私用区字符丢成空字符串
