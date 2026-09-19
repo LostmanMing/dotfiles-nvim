@@ -114,7 +114,7 @@ end, { desc = "切换诊断显示" })
 
 -- ==========================================
 -- 撤销树：<leader>ut（0.12 内置包 nvim.undotree 的浮窗包装，见 config/undotree.lua）
--- 树窗内光标移动即静默应用对应保存点；再按一次（或树窗内按 q）关闭
+-- 树窗内：光标移动即实时应用，⏎ 采纳关闭，q/Esc 放弃并恢复原状态
 -- ==========================================
 vim.keymap.set("n", "<leader>ut", function() require("config.undotree").toggle() end,
     { desc = "UndoTree" })
