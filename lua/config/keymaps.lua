@@ -113,7 +113,7 @@ vim.keymap.set("n", "<leader>cd", function()
 end, { desc = "切换诊断显示" })
 
 -- ==========================================
--- 撤销树：<leader>ut（0.12 内置包 nvim.undotree 的浮窗包装，见 config/undotree.lua）
+-- 撤销树：<leader>ut（0.12 内置包 nvim.undotree 的侧栏包装，见 config/undotree.lua）
 -- 树窗内：光标移动即实时应用，⏎ 采纳关闭，q/Esc 放弃并恢复原状态
 -- ==========================================
 vim.keymap.set("n", "<leader>ut", function() require("config.undotree").toggle() end,

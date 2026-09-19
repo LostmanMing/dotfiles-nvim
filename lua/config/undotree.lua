@@ -1,31 +1,12 @@
--- 撤销树浮窗：把 Neovim 0.12 内置包 nvim.undotree 画在居中浮窗里，并补一套选择器式交互。
--- 内置行为只有"光标移动即静默应用"（浏览 = 立即生效，没有确认/取消）；这里在浮动封装上补：
---   光标浏览   → 实时应用（保持插件机制，所见即所得；树里状态即缓冲区状态）
+-- 撤销树侧栏：Neovim 0.12 内置包 nvim.undotree 的包装（默认 30vnew，'splitright' 下落右侧）。
+-- 交互（内置只有"光标移动即静默应用"）：
+--   光标浏览   → 实时应用（所见即所得）
 --   ⏎          → 采纳当前保存点并关闭
 --   q / Esc    → 放弃浏览，恢复打开前的保存点，并关闭
 --   再按 <leader>ut → 直接关闭（保留浏览到的状态）
--- 关键细节：浮窗必须 enter=false 创建——undotree.open() 把树窗记录在"当前 buffer"上
--- （vim.b[buf].nvim_undotree），抢焦点会让记录挂到树 buffer 自己身上，导致
--- 从代码窗再按 <leader>ut 关不掉。绘制完成后再手动聚焦树窗。
+-- 历史决策（勿再改）：2026-09 试过居中浮窗——浮窗遮住代码窗，浏览保存点时看不到
+-- 改动详情，折回侧栏（树与代码窗并排才看得到 diff）。
 local M = {}
-
-local function open_float()
-    local buf = vim.api.nvim_create_buf(false, true)
-    local width = math.max(44, math.floor(vim.o.columns * 0.45))
-    local height = math.max(12, math.floor(vim.o.lines * 0.6))
-    local win = vim.api.nvim_open_win(buf, false, {
-        relative = "editor",
-        width = width,
-        height = height,
-        row = math.max(0, math.floor((vim.o.lines - height) / 2) - 1),
-        col = math.floor((vim.o.columns - width) / 2),
-        style = "minimal",
-        -- 不显式给 border：继承全局 'winborder'（options.lua 里统一 rounded）
-        title = " UndoTree · ⏎ 确认 · q 取消 ",
-        title_pos = "center",
-    })
-    return win, buf
-end
 
 -- 当前 buffer 上是否已记录着打开的树窗（与 undotree.open 的关闭条件一致）
 local function existing_tree_win(buf)
@@ -52,9 +33,10 @@ function M.toggle()
 
     local start_seq = vim.fn.undotree(src).seq_cur   -- 打开前的保存点，q/Esc 取消用
 
-    local win, buf = open_float()
-    undotree.open({ winid = win, bufnr = buf })
-    vim.api.nvim_set_current_win(win)
+    undotree.open()                                  -- 默认 30vnew；插件自己聚焦新窗
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.wo[win].winbar = " ⏎ 确认 · q 取消 "        -- 侧栏没有浮窗标题，操作提示放 winbar
 
     -- 选择器式交互：buffer-local，随树 buffer（bufhidden=wipe）关闭自动消失
     local function cancel()
