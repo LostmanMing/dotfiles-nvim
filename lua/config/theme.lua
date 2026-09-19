@@ -1,10 +1,13 @@
 -- 主题统一入口：调色板 + 全部自定义高亮组 + colorscheme 配置 + 多主题切换/持久化。
 -- 改颜色 / 风格只动这个文件；插件文件不写颜色字面量，一律引用 theme.palette。
 -- 高亮组由 M.setup() 统一经 Snacks.util.set_hl 注册（托管重挂），setup 在 snacks 的 config 里调用。
--- 多主题（借鉴 Youthdreamer/nvim 的思路）：
---   * 可用主题集在 plugins/themes.lua（lazy，:colorscheme 时由 lazy 自动加载）；
---   * <leader>T 打开选择器（移动实时预览、⏎ 采纳、Esc 还原，实现见 M.pick）；
---   * 选择结果持久化到 stdpath("state")/theme，VimEnter 时自动还原；
+-- 多主题（整体照抄 Youthdreamer/nvim 的路子：手工清单 + 选中即应用 + "name:style" 持久化，
+-- 见其 lua/features/switch-theme.lua）：
+--   * 可用主题插件在 plugins/themes.lua（lazy，:colorscheme 时由 lazy 自动加载）；
+--   * 主题清单 = 下面的 themes 表：只列真实存在的 colorscheme 名、可带 style；装新主题插件后在这里加名字；
+--   * <leader>T 选择器只做"选中→应用→关闭"，不做实时预览——预览机制（set_selection 补丁）
+--     是历次 bug 的来源（打开随机跳色、Esc 还原竞态），勿加回；
+--   * 持久化格式 "name:style" 写 stdpath("state")/theme，启动时先设 'background' 再 :colorscheme；
 --   * 换主题后：表面色跟随当前 colorscheme 重新派生、自定义高亮重注册、lualine 主题自动跟随。
 -- 模块顶层不 require 插件：spec import 期即被加载。
 local M = {}
@@ -100,7 +103,36 @@ function M.lualine_theme()
     return "auto"
 end
 
--- ══════════ 多主题：持久化 + 选择器 ══════════
+-- ══════════ 多主题：手工清单 + 选择器 + "name:style" 持久化 ══════════
+-- 清单只列真实存在、可加载的 colorscheme 名（对照各插件 colors/ 目录核对过）。
+-- style 用于加载前设置 'background'：gruvbox、*-day、*-latte、*-lotus、onelight 这类
+-- 主题的深浅由 background 决定，不指定会出现"名字和实际配色对不上"。
+-- 不要改回扫描式候选（getcompletion / lazy glob）：会混入 vim 自带主题（zellner 等）
+-- 和 catppuccin-nvim 这种过时 stub 名，且无法表达 style。
+local themes = {
+    -- onedarkpro（默认主题）
+    onedark = { style = "dark" },
+    onedark_dark = { style = "dark" },
+    onedark_vivid = { style = "dark" },
+    onelight = { style = "light" },
+    -- tokyonight
+    ["tokyonight-night"] = {},
+    ["tokyonight-storm"] = {},
+    ["tokyonight-moon"] = {},
+    ["tokyonight-day"] = { style = "light" },
+    -- catppuccin
+    ["catppuccin-frappe"] = {},
+    ["catppuccin-macchiato"] = {},
+    ["catppuccin-mocha"] = {},
+    ["catppuccin-latte"] = { style = "light" },
+    -- kanagawa
+    ["kanagawa-wave"] = {},
+    ["kanagawa-dragon"] = {},
+    ["kanagawa-lotus"] = { style = "light" },
+    -- gruvbox
+    gruvbox = { style = "dark" },
+}
+
 local state_file = vim.fn.stdpath("state") .. "/theme"
 
 function M.save()
@@ -108,7 +140,7 @@ function M.save()
     if not name or name == "" then return end
     local f = io.open(state_file, "w")
     if f then
-        f:write(name)
+        f:write(name .. ":" .. (vim.o.background or "dark"))
         f:close()
     end
 end
@@ -116,21 +148,24 @@ end
 function M.load()
     local f = io.open(state_file, "r")
     if not f then return end
-    local name = f:read("*l")
+    local data = f:read("*a") or ""
     f:close()
-    if not name or name == "" or name == vim.g.colors_name then return end
+    local name, style = data:match("([^:]+):?(.*)")
+    if not name or name == "" then return end
+    if style and style ~= "" then vim.o.background = style end
     if not pcall(vim.cmd.colorscheme, name) then
         vim.notify(("持久化的主题 %s 加载失败，回退默认"):format(name), vim.log.levels.WARN, { title = "Theme" })
         M.colorscheme.apply()
     end
 end
 
--- 主题选择器：自己用 telescope 原语搭（不用内置 colorscheme picker——它自带的
--- "Esc 还原"实测会被关闭阶段的收尾回调覆盖，停在最后一个预览上）。
--- 行为：移动光标即实时预览；⏎ 采纳并关闭；Esc / 取消 恢复打开前的主题。
--- 预览期间 ColorScheme 频发：_picking 挡掉持久化写入；返回后统一保存最终值。
--- 依赖 lazy 的模块加载拦截同步加载 telescope（require 路径；:Telescope 命令路径
--- 经 cmd handler 重派发、异步时序不可靠）。
+-- 主题选择器：结构照抄 Youthdreamer/nvim（telescope dropdown、选中即应用、无预览）。
+-- 两处本地化调整（都是实测踩出来的，勿回退）：
+--   * initial_mode = "insert"：telescope.lua 全局是 normal，普通模式打字过滤不可靠，
+--     且普通模式 ⏎ 会命中山默认的 select_default——把主题名当文件 :edit（"回车打开了
+--     一个 buffer"）；插入模式是验证过的稳定路径；
+--   * ⏎ 用 actions.select_default:replace 在动作层接管（i / n / 鼠标点击全覆盖），
+--     不要只 map("<i>", "<CR>")。
 function M.pick()
     local ok, pickers = pcall(require, "telescope.pickers")
     if not ok then
@@ -141,57 +176,43 @@ function M.pick()
     local conf = require("telescope.config").values
     local actions = require("telescope.actions")
     local action_state = require("telescope.actions.state")
+    local telescope_themes = require("telescope.themes")
 
-    -- 候选 = 当前 + 已装 + lazy 未加载的（与 Telescope 内置 colorscheme picker 同款来源）
-    local colors = { vim.g.colors_name or M.colorscheme.name }
-    local function add(name)
-        if name ~= "" and not vim.tbl_contains(colors, name) then
-            colors[#colors + 1] = name
-        end
-    end
-    for _, c in ipairs(vim.fn.getcompletion("", "color")) do add(c) end
-    local lazy_util = package.loaded["lazy.core.util"]
-    if lazy_util and lazy_util.get_unloaded_rtp then
-        for _, f in ipairs(vim.fn.globpath(table.concat(lazy_util.get_unloaded_rtp(""), ","), "colors/*", 1, 1)) do
-            add(vim.fn.fnamemodify(f, ":t:r"))
-        end
-    end
+    local names = vim.tbl_keys(themes)
+    table.sort(names)
 
-    local before = vim.g.colors_name
-    local accepted = false
-    local closed = false   -- find() 返回后的收尾期：stray 回调不再应用
-
-    local picker = pickers.new({}, {
-        prompt_title = "Colorscheme",
-        finder = finders.new_table({ results = colors }),
-        sorter = conf.generic_sorter({}),
-        attach_mappings = function(prompt_bufnr, map)
-            map("i", "<CR>", function()
-                local sel = action_state.get_selected_entry()
-                accepted = true
-                actions.close(prompt_bufnr)
-                if sel then pcall(vim.cmd.colorscheme, sel.value) end
-            end)
-            return true
-        end,
-    })
-    -- 移动即预览（与内置同款：挂 set_selection；关闭后的 stray 调用被 closed 挡住）
-    local set_selection = picker.set_selection
-    picker.set_selection = function(self, row)
-        set_selection(self, row)
-        if closed then return end
-        local sel = action_state.get_selected_entry()
-        if sel then pcall(vim.cmd.colorscheme, sel.value) end
-    end
-
-    M._picking = true
-    picker:find()
-    closed = true
-    M._picking = false
-    if not accepted and before and before ~= "" then
-        pcall(vim.cmd.colorscheme, before)   -- 取消：恢复到打开前的主题
-    end
-    M.save()
+    pickers.new(
+        telescope_themes.get_dropdown({
+            layout_config = { width = 0.5, height = 0.4 },
+            initial_mode = "insert",
+        }),
+        {
+            prompt_title = "Colorscheme",
+            finder = finders.new_table({ results = names }),
+            sorter = conf.generic_sorter({}),
+            attach_mappings = function(prompt_bufnr, _)
+                actions.select_default:replace(function()
+                    local sel = action_state.get_selected_entry()
+                    if not sel then
+                        actions.close(prompt_bufnr)
+                        return
+                    end
+                    -- 先设 'background' 再加载主题（顺序见清单区注释）
+                    local info = themes[sel.value] or {}
+                    if info.style then
+                        vim.o.background = info.style
+                        vim.g.theme_style = info.style
+                    end
+                    local ok2, err = pcall(vim.cmd.colorscheme, sel.value)
+                    if not ok2 then
+                        vim.notify(("主题 %s 加载失败: %s"):format(sel.value, err), vim.log.levels.ERROR, { title = "Theme" })
+                    end
+                    actions.close(prompt_bufnr)
+                end)
+                return true
+            end,
+        }
+    ):find()
 end
 
 -- ══════════ 统一注册 + 运行时钩子（在 snacks 的 config 里调用） ══════════
@@ -201,13 +222,13 @@ function M.setup()
     Snacks.util.set_hl(M.hl)
 
     local grp = vim.api.nvim_create_augroup("ThemeRuntime", { clear = true })
-    -- 换主题（含选择器实时预览）：重派生表面色 + 重注册高亮；非预览时段才持久化
+    -- 换主题：重派生表面色 + 重注册高亮，并持久化（与 Youthdreamer 的 detect_theme_change 等价）
     vim.api.nvim_create_autocmd("ColorScheme", {
         group = grp,
         callback = function()
             vim.schedule(function()
                 M.setup()
-                if not M._picking then M.save() end
+                M.save()
             end)
         end,
     })
