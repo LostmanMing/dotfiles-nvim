@@ -19,6 +19,13 @@
 
 回退方案：noice spec 加一行 `enabled = false` 即可，随时可试。
 
+## 内置补全替代 blink —— **两轮试用后回退（2026-09-19），结论归档**
+
+- 两轮试用均回退，blink 继续在用。第一轮作废（交互会话跑旧 0.12.0-dev 二进制、两版 `vim.lsp.completion` 相差 745 行，属无效环境）；第二轮在系统统一 0.12.5 后，从全配置试到最小形态（只加 `autocomplete = true`）。
+- **决定性短板（实测）**：0.12.5 的 autocomplete 菜单**不遵守 `pumheight`/`pummaxwidth`**——pumheight=10 时弹出 20 行菜单、pummaxwidth=60 时铺到约 92 列，浮窗尺寸无法约束、挡代码；blink 自绘浮窗（max_height 配置被遵守）故无此问题。本版上游行为，配置层无解。
+- 其他差距（与版本无关，先前实测）：菜单刷新依赖服务端 `isIncomplete`（lua_ls 在未分析工作区退化）、无 snippet/路径源、无 ghost text。
+- 复评条件：nvim 修复该菜单的尺寸控制（日后升 0.13 时顺手验证）/ 出现 snippet 源机制。**重试步骤**：`options.lua` 加一行 `vim.opt.autocomplete = true`（要 LSP 项再加 `vim.lsp.completion.enable(autotrigger=true)` 到 lsp.lua 的 on_attach），并把 `lua/plugins/blink.lua` 的 spec 注释掉（return {}）。
+
 ## 既存问题（先前发现，未处理）
 
 - [ ] lua_ls 缺 globals 配置：全仓库文件都有 `Undefined global vim` 诊断（旧文件同样存在）

@@ -16,7 +16,7 @@
 
 | 软件 | 用途 | 备注 |
 |------|------|------|
-| Neovim >= 0.12 | 编辑器本身 | nvim-treesitter main 分支要求 0.12+；配置用到 `winborder`/`pumborder`/`virtual_lines`/`vim.lsp.document_color` |
+| Neovim >= 0.12 | 编辑器本身 | nvim-treesitter main 分支要求 0.12+；配置用到 `winborder`/`virtual_lines`/`vim.lsp.document_color` |
 | Git | 插件管理 | lazy.nvim 需要 |
 | Node.js >= 18 | LSP 运行时 | jsonls, yamlls 等需要 |
 | ripgrep | Telescope **必需** | `live_grep`/`grep_string` 只用 rg；`find_files` 的命令选择也是 rg 优先（`__files.lua` 里 `rg → fd → fdfind → find`）。没装会降级到 `find`，那就完全不认 `.gitignore` |
@@ -114,6 +114,10 @@ Neo-tree 设置 `use_popups_for_input=false` 后，`a/r` 等文本操作走 `vim
 ### 主题（多主题切换）
 
 默认 OneDark；可选主题集在 `lua/plugins/themes.lua`（全部 `lazy=true`，靠 lazy 在 `ColorSchemePre` 按名加载）。`<leader>T` 的选择器是 `config/theme.lua` 的 `M.pick` 自搭的：**不要改回内置 `telescope.builtin.colorscheme`**——它自带的 Esc 还原实测会被关闭阶段的收尾回调覆盖（停在最后一个预览上），自搭版用 `set_selection` 补丁做预览、`closed` 标志挡收尾期杂散回调。持久化：ColorScheme 后写 `stdpath("state")/theme`（选择器 `_picking` 期间不写），VimEnter 后必须经 `vim.schedule` 还原——直接放在 VimEnter 上下文里 `:colorscheme` 会 E185（lazy 的按需加载在该上下文不生效，实测）。表面色派生：`bg_main←Normal.bg`、`bg_raised` 按其明暗提亮/加深一档；`grey_sep`/`grey_accent` 等是手工挑的固定中性色，不派生。
+
+### 补全（blink，在用）
+
+blink.cmp 在用（`lua/plugins/blink.lua`）。2026-09-19 两轮试用 nvim 0.12 内置补全后回退：0.12.5 的 autocomplete 菜单**不遵守 `pumheight`/`pummaxwidth`**（实测 10→20 行、60→~92 列），浮窗尺寸无法约束、挡代码；另有刷新依赖 isIncomplete、无 snippet/路径源等差距。完整结论与重试步骤归档在 TODO.md「内置补全」。注意系统 nvim 已统一为 0.12.5（`dpkg-divert`，旧二进制在 `/usr/bin/nvim.distrib`）——第一轮试用曾因旧 0.12.0-dev 混跑导致误判。
 
 ### 剪贴板
 
