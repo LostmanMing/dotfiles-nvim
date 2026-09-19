@@ -288,14 +288,9 @@ return {
         },
         config = function(_, opts)
             require("neo-tree").setup(opts)
-            local function set_untracked_highlight()
-                vim.api.nvim_set_hl(0, "NeoTreeGitUntracked", { fg = "#81B88B" })
-            end
-            set_untracked_highlight()
-            vim.api.nvim_create_autocmd("ColorScheme", {
-                group = vim.api.nvim_create_augroup("NeoTreeGitUntrackedHighlight", { clear = true }),
-                callback = set_untracked_highlight,
-            })
+            -- Untracked 覆写 OneDark 默认灰为可见绿（Ignored 保持灰）。
+            -- 用 Snacks.util.set_hl 托管：换 colorscheme 会 hi clear，需要自动重挂。
+            Snacks.util.set_hl({ NeoTreeGitUntracked = { fg = "#81B88B" } })
 
             local group = vim.api.nvim_create_augroup("NeoTreePreviewWinbar", { clear = true })
             vim.api.nvim_create_autocmd("WinClosed", {

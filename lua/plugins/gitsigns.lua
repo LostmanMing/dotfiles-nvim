@@ -63,24 +63,18 @@ return {
         config = function(_, opts)
             require("gitsigns").setup(opts)
 
-            local function set_git_highlights()
-                for _, name in ipairs({ "GitSignsAdd", "GitSignsUntracked" }) do
-                    vim.api.nvim_set_hl(0, name, { fg = "#81B88B" })
-                end
-                for _, name in ipairs({ "GitSignsStagedAdd", "GitSignsStagedUntracked" }) do
-                    vim.api.nvim_set_hl(0, name, { fg = "#6A9955" })
-                end
-                for _, name in ipairs({ "GitSignsStagedChange", "GitSignsStagedChangedelete" }) do
-                    vim.api.nvim_set_hl(0, name, { fg = "#8A6A28" })
-                end
-                for _, name in ipairs({ "GitSignsStagedDelete", "GitSignsStagedTopdelete" }) do
-                    vim.api.nvim_set_hl(0, name, { fg = "#632F32" })
-                end
-            end
-            set_git_highlights()
-            vim.api.nvim_create_autocmd("ColorScheme", {
-                group = vim.api.nvim_create_augroup("GitsignsGitHighlights", { clear = true }),
-                callback = set_git_highlights,
+            -- staged/unstaged 分档配色：亮绿=未暂存新增/未跟踪，深绿/深黄/深砖红=staged 各状态
+            -- （上游 staged sign 默认带 50% 前景色，OneDark 上会变成看不清的墨绿）。
+            -- 用 Snacks.util.set_hl 托管：换 colorscheme 会 hi clear，需要自动重挂。
+            Snacks.util.set_hl({
+                GitSignsAdd = { fg = "#81B88B" },
+                GitSignsUntracked = { fg = "#81B88B" },
+                GitSignsStagedAdd = { fg = "#6A9955" },
+                GitSignsStagedUntracked = { fg = "#6A9955" },
+                GitSignsStagedChange = { fg = "#8A6A28" },
+                GitSignsStagedChangedelete = { fg = "#8A6A28" },
+                GitSignsStagedDelete = { fg = "#632F32" },
+                GitSignsStagedTopdelete = { fg = "#632F32" },
             })
         end,
     },
