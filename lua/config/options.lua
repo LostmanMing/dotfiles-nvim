@@ -232,8 +232,9 @@ local function autosave()
     if vim.bo.modified and require("config.util").is_writable_file_buf() then
         local ok, err = pcall(vim.cmd, "silent lockmarks write")
         if not ok then
-            -- autocmd 里的报错前缀又长又没用，取最后一个 "Vim:" 之后的原因（如 E212: ...）
-            local reason = tostring(err):gsub("^.*Vim:", "")
+            -- autocmd 里的报错前缀又长又没用；剥到最后一个 Vim... : 为止——nvim 命令报错
+            -- 的格式是 Vim(write):E45...（带命令名），不是 Vim:，两种都要匹配
+            local reason = tostring(err):gsub("^.*Vim[^:]*:", "")
             vim.notify(("自动保存失败: %s"):format(reason), vim.log.levels.ERROR,
                 { title = "AutoSave", id = "autosave_fail" })
         end
