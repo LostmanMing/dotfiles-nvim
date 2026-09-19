@@ -4,7 +4,7 @@
 
 **重要**: 先询问用户需要配置哪些部分，不要一次性全装。根据用户系统自动选择包管理器，本文件只列所需软件。
 
-**规则**: 新增任何配置（插件、快捷键、选项）必须在对应文件中写注释说明用途。每个 keymap 必须带 `desc`。
+**规则**: 新增任何配置（插件、快捷键、选项）必须在对应文件中写注释说明用途。每个 keymap 必须带 `desc`。颜色/风格统一走 `lua/config/theme.lua`（调色板 + 高亮组 + colorscheme），插件文件不写颜色字面量。
 
 **开发 Skill**: 修改本仓库时使用 `/develop-neovim`；它负责安装、修改、排错和真实交互验收，并复用下方已有的 `verify-nvim-config`。
 
@@ -109,7 +109,7 @@ Neo-tree 设置 `use_popups_for_input=false` 后，`a/r` 等文本操作走 `vim
 
 ### Git 标记
 
-`lua/plugins/gitsigns.lua` 必须建立 staged/unstaged 层级：未暂存新增/未跟踪标记用 VS Code 亮绿 `#81B88B`；staged 新增用深绿 `#6A9955`、修改用深黄 `#8A6A28`、删除用深砖红 `#632F32`，并在 `ColorScheme` 后重设（重注册现由 `Snacks.util.set_hl` 托管）。staged sign glyph 必须与 unstaged 相同（`▎` 等），因为两者共用 Snacks statuscolumn 的 Git 槽，不能让 `┃` 的居中视觉位置显得错列。上游默认给 staged sign 50% 前景色，在 OneDark 背景上会变成看不清的墨绿。
+`lua/plugins/gitsigns.lua` 必须建立 staged/unstaged 层级：未暂存新增/未跟踪标记用 VS Code 亮绿 `#81B88B`；staged 新增用深绿 `#6A9955`、修改用深黄 `#8A6A28`、删除用深砖红 `#632F32`。色值与注册统一在 `lua/config/theme.lua` 的 `M.hl`（经 `Snacks.util.set_hl` 托管，换 colorscheme 自动重挂），改色不改这里。staged sign glyph 必须与 unstaged 相同（`▎` 等），因为两者共用 Snacks statuscolumn 的 Git 槽，不能让 `┃` 的居中视觉位置显得错列。上游默认给 staged sign 50% 前景色，在 OneDark 背景上会变成看不清的墨绿。
 
 ### 剪贴板
 

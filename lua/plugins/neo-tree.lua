@@ -149,9 +149,6 @@ return {
         },
         config = function(_, opts)
             require("neo-tree").setup(opts)
-            -- Untracked 覆写 OneDark 默认灰为可见绿（Ignored 保持灰）。
-            -- 用 Snacks.util.set_hl 托管：换 colorscheme 会 hi clear，需要自动重挂。
-            Snacks.util.set_hl({ NeoTreeGitUntracked = { fg = "#81B88B" } })
             preview.setup()
 
             if directory_startup then

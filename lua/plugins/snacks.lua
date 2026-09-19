@@ -5,12 +5,8 @@
 
 local dashboard = require("config.dashboard")
 
--- 作用域竖线：只标记光标所在的「当前」作用域。不用彩色——像 VSCode 那样，
--- 普通缩进线是暗灰，当前作用域（含最外层）只是**同一系灰、亮度高一点**，
--- 既能一眼看出光标在哪个块里，又不会被误读成诊断/git 之类的语义色。
---   普通缩进灰 ≈ #3b4048（NonText）；当前作用域用更亮的中性灰 #6b7280。
-local SCOPE_ACCENT = "#6b7280"      -- 比缺省缩进灰更亮的中性灰
-
+-- 作用域竖线：只标记光标所在的「当前」作用域（颜色在 config/theme.lua，统一入口）。
+-- 不用彩色——像 VSCode 那样，普通缩进线是暗灰，当前作用域只是同一系灰、亮度高一点。
 local scope_hl = "IndentScopeActive"
 
 return {
@@ -96,14 +92,9 @@ return {
                 })
             end
 
-            -- 用 Snacks.util.set_hl 而非 nvim_set_hl：它托管高亮组，换 colorscheme 后自动重挂
-            local hl = {
-                EvaYellow = { fg = dashboard.eva.yellow },
-                EvaPurple = { fg = dashboard.eva.purple, bold = true },
-                EvaGreen = { fg = dashboard.eva.green },
-                IndentScopeActive = { fg = SCOPE_ACCENT },
-            }
-            Snacks.util.set_hl(hl)
+            -- 统一主题入口：全部自定义高亮组（EVA / git 分档 / bufferline / 粘性上下文…）
+            -- 都在这里一次性注册；Snacks.util.set_hl 托管重挂，换 colorscheme 自动重设
+            require("config.theme").setup()
 
             -- inlay hints 开关（从 lsp.lua 迁来）：Snacks.toggle 带通知和 which-key 图标，
             -- 作用域同为 bufnr=0，行为和原来一致

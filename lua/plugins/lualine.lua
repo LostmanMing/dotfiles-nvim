@@ -1,4 +1,5 @@
 -- 底部状态栏
+local theme = require("config.theme")
 return {
     {
         "nvim-lualine/lualine.nvim",
@@ -6,7 +7,7 @@ return {
         dependencies = { "nvim-tree/nvim-web-devicons" },
         opts = {
             options = {
-                theme = "onedark",
+                theme = theme.colorscheme.lualine,
                 globalstatus = true,                            -- 全局状态栏，与 laststatus=3 一致
                 -- 尖箭头段分隔（U+E0B0 / U+E0B2）；组件分隔留空更干净
                 -- 用字节转义写入，避免工具把私用区字符丢成空字符串
@@ -18,7 +19,7 @@ return {
                 lualine_b = {
                     -- 不显式设 icon：lualine 默认的分支图标 U+E0A0 是 Nerd Font 标准字形，
                     -- 覆盖成别的私有区码点在部分字体里没有对应字形，会显示成空白
-                    { "branch", color = { fg = "#67a659", bold = true } },  -- 初号机装甲绿（与 starship 分支色一致）
+                    { "branch", color = { fg = theme.palette.eva_green, bold = true } },  -- 初号机装甲绿（与 starship 分支色一致）
                     -- diff 数据由 gitsigns 提供（lualine 自动读取）
                     { "diff", symbols = { added = " ", modified = " ", removed = " " } },
                 },

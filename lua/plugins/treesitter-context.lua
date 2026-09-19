@@ -23,13 +23,6 @@ return {
         },
         config = function(_, opts)
             require("treesitter-context").setup(opts)
-            -- 钉住区背景比正文底色(#282c34)略亮一档，形成一个"浮起"的色块；
-            -- 行号列跟着用同一底色，整块才是连续的，不会像分隔线那样把 gutter 切断。
-            -- 用 Snacks.util.set_hl 托管：换 colorscheme 会 hi clear，需要自动重挂。
-            Snacks.util.set_hl({
-                TreesitterContext = { bg = "#2f343f" },
-                TreesitterContextLineNumber = { fg = "#5c6370", bg = "#2f343f" },
-            })
         end,
     },
 }

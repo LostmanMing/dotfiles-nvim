@@ -59,6 +59,7 @@ nvim/
 │   ├── config/
 │   │   ├── options.lua
 │   │   ├── keymaps.lua           # 全局键位注册
+│   │   ├── theme.lua             # 主题统一入口（调色板/高亮组/colorscheme）
 │   │   ├── quit.lua              # 智能 q 状态机 + BufEnter 自动退出
 │   │   ├── neo-tree-preview.lua  # 文件树预览机制（winbar / 跨 tab 可见性信号）
 │   │   ├── dashboard.lua         # EVA 启动页 sections

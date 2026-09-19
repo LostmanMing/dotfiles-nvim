@@ -30,13 +30,6 @@ local function art_section(self)
     }
 end
 
--- 初号机配色：色值直接从 scripts/eva01-source.png 取样，不是凭感觉调的
-M.eva = {
-    purple = "#9888d1",     -- 机体主色
-    yellow = "#e3c645",     -- 下颚 / 角
-    green  = "#67a659",     -- 装甲配件
-}
-
 -- 底部启动耗时。不用内置 startup 段：它把图标和文字放进同一个 chunk，没法分开上色。
 -- 数据来源相同（lazy.stats）。padding 是 {底部, 顶部}，留一行和菜单分开。
 local function startup_section()
