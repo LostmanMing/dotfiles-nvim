@@ -101,7 +101,7 @@ Dashboard 不能直接成为非浮动 preview 的旧 buffer：Neo-tree 会把它
 
 Neo-tree 设置 `use_popups_for_input=false` 后，`a/r` 等文本操作走 `vim.ui.input`，由 `snacks.lua` 的 `input = {}` 接管为全局 Snacks Input；插入态单次 Esc 直接取消，避免补全内容误提交。Snacks setup 后的 adapter 只剥离精确的 `Neo-tree Popup\n` cmdheight=0 兼容前缀，避免多行标题截断；其它全局输入必须原样转发。不要改写 `add`/`rename` 映射或用 Telescope 重做输入：当前链路保留 Neo-tree 的选中路径、`/` 建目录、嵌套/brace 创建、Tab 补全、取消、重复目标错误与刷新。
 
-自动保存、reload 与外部冲突处理都在 `lua/config/options.lua`：`AutoSave` 在 BufLeave、FocusLost、InsertLeave 与 TextChanged 对普通可写文件执行 `silent! lockmarks write`；`AutoReload` 在 FocusGained、BufEnter、CursorHold 与 CursorHoldI 执行 checktime；`FileChangedShell` 对已修改 buffer 走原生 ask，否则 reload。不要重新引入 `config.autosave` 模块、WorkspaceEdit 包装、后台 buffer attach、磁盘签名 gate 或 force write。`q`/tab/quit 的显式 `silent write` 是保留的退出路径（q 状态机本体在 `lua/config/quit.lua`，两处 save 循环是刻意的兜底，勿合并）。
+自动保存、reload 与外部冲突处理都在 `lua/config/options.lua`：`AutoSave` 在 BufLeave、FocusLost、InsertLeave 与 TextChanged 对普通可写文件执行 `silent lockmarks write`（成功静默；失败发固定 id 的 ERROR 通知——不得带回 `silent!`，`!` 会连真失败一起吞掉）；`AutoReload` 在 FocusGained、BufEnter、CursorHold 与 CursorHoldI 执行 checktime；`FileChangedShell` 对已修改 buffer 走原生 ask，否则 reload。不要重新引入 `config.autosave` 模块、WorkspaceEdit 包装、后台 buffer attach、磁盘签名 gate 或 force write。`q`/tab/quit 的显式 `silent write` 是保留的退出路径（q 状态机本体在 `lua/config/quit.lua`，两处 save 循环是刻意的兜底，勿合并）。
 
 `nvim-file-operations` 只监听 Neo-tree event 并通知支持 `workspace.fileOperations` 的 LSP；Neo-tree 始终是唯一文件操作入口，不调用该插件当前主线的直接 `rename/create/delete` API。它必须在 `vim.lsp.enable()` 前声明 global capability，且 `auto_save=false`，继续由 `options.lua` 的 AutoSave 保存成功 workspace edit 的普通文件。LuaLS 单文件重命名会给出更新 `require` 的确认；目录/其它语言的 import 更新属于 server 能力，不能承诺。前置 workspace edit 与文件系统操作之间没有自动回滚，失败时用 undo 或 VCS 恢复。
 

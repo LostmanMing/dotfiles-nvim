@@ -224,10 +224,19 @@ vim.opt.fixendofline = false       -- 保存时不自动在文件末尾补换行
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
 
--- 自动保存：尽可能缩小"已改未存"窗口，让外部 reload 安全
+-- 自动保存：尽可能缩小"已改未存"窗口，让外部 reload 安全。
+-- 成功保持静默（silent 挡掉 "xxL, xxB" 噪音）；失败才提示——且不能带 silent!，
+-- 那个 ! 会把错误一并吞掉，磁盘满/权限问题这类真失败就变成静默丢改动。
+-- 固定 id：TextChanged 会高频触发，重复失败折叠成一条通知，不刷屏。
 local function autosave()
     if vim.bo.modified and require("config.util").is_writable_file_buf() then
-        pcall(vim.cmd, "silent! lockmarks write")
+        local ok, err = pcall(vim.cmd, "silent lockmarks write")
+        if not ok then
+            -- autocmd 里的报错前缀又长又没用，取最后一个 "Vim:" 之后的原因（如 E212: ...）
+            local reason = tostring(err):gsub("^.*Vim:", "")
+            vim.notify(("自动保存失败: %s"):format(reason), vim.log.levels.ERROR,
+                { title = "AutoSave", id = "autosave_fail" })
+        end
     end
 end
 
