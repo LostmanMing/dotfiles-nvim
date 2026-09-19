@@ -92,7 +92,9 @@ return {
                 vim.lsp.buf.format({ async = true })
             end, { desc = "格式化代码" })
             vim.keymap.set("n", "<leader>ct", function()
-                vim.lsp.document_color.enable(not vim.lsp.document_color.is_enabled(0), 0, { style = "● " })
+                -- 0.12 签名是 (enable, filter, opts)，bufnr 要放在 filter 表里
+                vim.lsp.document_color.enable(not vim.lsp.document_color.is_enabled({ bufnr = 0 }),
+                    { bufnr = 0 }, { style = "● " })
             end, { desc = "切换色值圆点" })
 
             -- inlay hint 开关移到 snacks.lua：用 Snacks.toggle.inlay_hints()（同为 bufnr=0
@@ -124,7 +126,7 @@ return {
                 -- 直接盖掉 treesitter 的字符串高亮；改成在色值前面加一个该颜色的圆点，
                 -- 原文的语法高亮保持不变。
                 if client:supports_method("textDocument/documentColor") then
-                    vim.lsp.document_color.enable(true, bufnr, { style = "● " })
+                    vim.lsp.document_color.enable(true, { bufnr = bufnr }, { style = "● " })
                 end
                 -- 参数签名自动触发：仅在支持 signatureHelp 的 buffer 上，限定 buffer-local
                 if client:supports_method("textDocument/signatureHelp") then
