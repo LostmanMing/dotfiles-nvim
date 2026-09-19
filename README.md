@@ -155,6 +155,14 @@ nvim/
 
 它也在 `FocusGained`、`BufEnter` 与 CursorHold 时检查外部修改：未修改 buffer 自动重载；本地已有未保存修改时使用 Neovim 原生确认流程选择保留或重载。
 
+### 撤销树
+
+| Key | Action |
+|-----|--------|
+| `<leader>ut` | 打开 / 关闭撤销树（Neovim 0.12 内置包 `nvim.undotree`，首次按下才加载） |
+
+树窗口内光标移动即静默应用对应保存点；配合 `undofile`，关掉重开也能翻历史分支。
+
 ### 窗口
 
 | Key | Action |
