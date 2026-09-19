@@ -113,10 +113,8 @@ vim.keymap.set("n", "<leader>cd", function()
 end, { desc = "切换诊断显示" })
 
 -- ==========================================
--- 撤销树：<leader>ut（Neovim 0.12 内置包 nvim.undotree，首次按下才 packadd）
--- 树窗口内光标移动即静默应用对应保存点；再按一次关闭
+-- 撤销树：<leader>ut（0.12 内置包 nvim.undotree 的浮窗包装，见 config/undotree.lua）
+-- 树窗内光标移动即静默应用对应保存点；再按一次（或树窗内按 q）关闭
 -- ==========================================
-vim.keymap.set("n", "<leader>ut", function()
-    vim.cmd.packadd("nvim.undotree")
-    vim.cmd.Undotree()
-end, { desc = "UndoTree" })
+vim.keymap.set("n", "<leader>ut", function() require("config.undotree").toggle() end,
+    { desc = "UndoTree" })
