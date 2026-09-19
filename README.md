@@ -58,25 +58,31 @@ nvim/
 ├── lua/
 │   ├── config/
 │   │   ├── options.lua
-│   │   ├── autosave.lua
-│   │   ├── keymaps.lua
+│   │   ├── keymaps.lua           # 全局键位注册
+│   │   ├── quit.lua              # 智能 q 状态机 + BufEnter 自动退出
+│   │   ├── neo-tree-preview.lua  # 文件树预览机制（winbar / 跨 tab 可见性信号）
+│   │   ├── dashboard.lua         # EVA 启动页 sections
+│   │   ├── terminal.lua          # toggleterm 状态机（环切 / gf / on_exit）
 │   │   ├── lazy-setup.lua
 │   │   └── util.lua
 │   └── plugins/
 │       ├── blink.lua
 │       ├── bufferline.lua
+│       ├── dap.lua
 │       ├── diffview.lua
 │       ├── dropbar.lua
+│       ├── file-operations.lua
 │       ├── flash.lua
 │       ├── gitsigns.lua
-│       ├── im-select.lua
+│       ├── leetcode.lua
 │       ├── lsp.lua
 │       ├── lualine.lua
 │       ├── markdown.lua
-│       ├── noice.lua
 │       ├── neo-tree.lua
+│       ├── noice.lua
 │       ├── onedarkpro.lua
 │       ├── pairs.lua
+│       ├── scope.lua
 │       ├── sleuth.lua
 │       ├── smear-cursor.lua
 │       ├── snacks.lua
@@ -102,20 +108,24 @@ nvim/
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | 底部状态栏 | - |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | `<leader>` 后弹出快捷键提示 | `<leader>` |
 | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | 顶部 buffer 标签栏 | - |
+| [scope.nvim](https://github.com/tiagovla/scope.nvim) | buffer 按 tab 隔离（见下方 Tab 一节） | `:ScopeList` |
 | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim) | 侧边文件树、预览与 Git 状态 | `Ctrl+n` |
 | [nvim-file-operations](https://github.com/Crysthamus/nvim-file-operations) | Neo-tree 移动/重命名时通知支持该协议的 LSP 更新引用 | - |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 模糊搜索（文件/文本/buffer/符号） | `<leader>f*` |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | 语法高亮、增量选择、文本对象 | `vif/vaf`, `]f/[f` |
 | [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context) | 把当前函数/循环的签名行钉在窗口顶部 | `<leader>cc`, `[C` |
+| [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects) | 文本对象：函数/类/参数/循环的选择与跳转 | `vif/vaf`, `]f/[f`, `]p/[p` |
 | [dropbar.nvim](https://github.com/Bekaboo/dropbar.nvim) | 窗口顶部面包屑导航（路径 > 类 > 函数） | `<leader>cb` |
-| [mason.nvim](https://github.com/mason-org/mason.nvim) | LSP 服务器自动安装管理 | `gd`, `gh`, `grr`, `<C-k>`, `<leader>cf/ci/ct` |
+| [mason.nvim](https://github.com/mason-org/mason.nvim) | LSP 服务器自动安装管理（clangd / lua_ls / pyright 等 8 个） | - |
 | [blink.cmp](https://github.com/saghen/blink.cmp) | 自动补全引擎（自带 LSP/路径/buffer/片段源，片段走内置 `vim.snippet`） | `Tab` / `S-Tab` / `CR` |
 | [friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 通用代码片段集合（由 blink 读取） | - |
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | 添加/删除/替换包围字符 | `ys`, `ds`, `cs` |
 | [mini.pairs](https://github.com/echasnovski/mini.pairs) | 自动配对括号和引号 | - |
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | 行号旁 git 增删改标记，hunk 操作 | `<leader>gs/gr/gp/gb/gd` |
 | [diffview.nvim](https://github.com/sindrets/diffview.nvim) | Git diff / 文件历史面板 | `<leader>gv/gV/gh/gH` |
+| [nvim-dap](https://github.com/mfussenegger/nvim-dap) | 调试器（Python debugpy / C·C++ lldb-vscode；配 nvim-dap-python） | `<leader>db/dc/do/di/dO/dr/dq/dA` |
 | [flash.nvim](https://github.com/folke/flash.nvim) | 输入字符屏幕标记，一键跳转 | `<leader>s` / `<leader>S` |
+| [leetcode.nvim](https://github.com/kawre/leetcode.nvim) | LeetCode 题库浏览与作答 | `<leader>ld/ll/lr` |
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | 诊断列表面板 | `<leader>xx` |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 内嵌终端，多方向多实例 | `<leader>tt/tf/th/tv` |
 | [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | nvim ↔ tmux 面板无缝导航 | `Ctrl+hjkl` |
@@ -124,7 +134,6 @@ nvim/
 | [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | TODO/FIX/HACK 等注释关键词高亮与检索 | `]t/[t`, `<leader>xt/ft` |
 | [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | Markdown 在编辑器内渲染（标题/表格/复选框） | `<leader>mt` |
 | [smear-cursor.nvim](https://github.com/sphamba/smear-cursor.nvim) | 光标移动拖影动画 | - |
-| [im-select.nvim](https://github.com/keaising/im-select.nvim) | 离开插入模式自动切回英文输入法 | - |
 | [vim-sleuth](https://github.com/tpope/vim-sleuth) | 按文件自动检测缩进宽度 | - |
 
 
