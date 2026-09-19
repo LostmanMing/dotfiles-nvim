@@ -257,7 +257,6 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     callback = function()
         local fixed_filetypes = {
             ["neo-tree"] = true,
-            OverseerList = true,
         }
         if fixed_filetypes[vim.bo.filetype] then
             vim.opt_local.winfixbuf = true

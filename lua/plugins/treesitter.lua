@@ -6,9 +6,7 @@ return {
         build = ":TSUpdate",
         config = function()
             local ts = require("nvim-treesitter")
-            ts.setup({
-                install_dir = vim.fn.stdpath("data") .. "/site",
-            })
+            ts.setup()
 
             local ensure = {
                 "c", "cpp", "python", "lua", "bash", "cmake",

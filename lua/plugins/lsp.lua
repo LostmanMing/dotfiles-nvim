@@ -16,20 +16,6 @@ return {
         end,
     },
 
-    -- Mason tool installer：非 LSP 工具（仅在系统没装 tree-sitter 时下载）
-    {
-        "WhoIsSethDaniel/mason-tool-installer.nvim",
-        lazy = false,
-        dependencies = { "mason-org/mason.nvim" },
-        config = function()
-            if vim.fn.executable("tree-sitter") ~= 1 then
-                require("mason-tool-installer").setup({
-                    ensure_installed = { "tree-sitter-cli" },
-                })
-            end
-        end,
-    },
-
     -- Mason LSP config integration
     {
         "mason-org/mason-lspconfig.nvim",
